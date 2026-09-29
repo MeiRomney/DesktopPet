@@ -1,0 +1,16 @@
+html, body, #root { margin: 0; height: 100%; background: transparent; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; }
+.wrap { position: absolute; width: 100px; }
+.pet { cursor: grab; filter: drop-shadow(0 0 2px #fff) drop-shadow(0 2px 4px rgba(0,0,0,.35)); user-select: none; }
+.pet:active { cursor: grabbing; }
+.pet.scared, .pet.shocked { animation: shake .12s infinite; }
+@keyframes shake { 50% { transform: translateX(3px) rotate(1deg); } }
+.bubble { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); width: max-content; max-width: 240px;
+  margin-bottom: 8px; padding: 8px 12px; background: #fff; color: #1b1b1f; border-radius: 14px; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+.panel { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); width: 230px; margin-top: 6px; padding: 8px;
+  background: #1b1b1f; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; }
+.items { display: flex; justify-content: space-between; }
+.items button { font-size: 22px; background: transparent; border: 0; cursor: pointer; border-radius: 8px; }
+.items button:hover, .items button:focus-visible { background: #35353d; outline: none; }
+.panel input { border: 0; border-radius: 8px; padding: 7px 9px; font-size: 13px; outline: 2px solid transparent; }
+.panel input:focus { outline-color: #7aa2ff; }
+.obj { position: absolute; font-size: 44px; cursor: pointer; user-select: none; transition: left .3s ease-in, top .3s ease-in; }
