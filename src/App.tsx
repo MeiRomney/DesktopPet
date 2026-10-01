@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import type { Pose } from "./reactions.js";
+import type { Pose } from "./reactions";
 import {
   ITEMS,
   idleLine,
   nearPose,
   react as scripted,
   visit,
-} from "./reactions.js";
+} from "./reactions";
 
 type Obj = { id: number; emoji: string; name: string; x: number; y: number };
 type Reply = { ok: boolean; pose?: Pose; says?: string; error?: string };
@@ -23,97 +23,129 @@ declare global {
   }
 }
 
-const W = 96; // pet width in px
-const COLORS = ["#1b1b1f", "#ff4d4d", "#4da6ff", "#2fbf71", "#ffb02e"];
+const W = 72,
+  H = 128; // pet size in px (SVG viewBox is 100 x 178)
+const COLORS = ["#43474f", "#e5566d", "#4a90e2", "#2fbf71", "#f0a030"]; // body colors; first is the default charcoal
 const clamp = (v: number, lo: number, hi: number) =>
   Math.min(Math.max(v, lo), hi);
 
+const INK = "#111";
+
+// Chunky blob character: thick outline, big head, tube limbs, white eyes with pupils glancing sideways.
 function Stickman({ pose, color }: { pose: Pose; color: string }) {
   const up = pose === "scared" || pose === "shocked" || pose === "happy";
-  const bigEyes = pose === "scared" || pose === "shocked";
+  const wide = pose === "scared" || pose === "shocked";
+  const rx = wide ? 8.5 : 7,
+    ry = wide ? 11.5 : 9.5,
+    pr = pose === "shocked" ? 3 : 4.2;
   const mouths: Record<Pose, string> = {
-    neutral: "M46 44 q4 3 8 0",
-    happy: "M44 42 q6 8 12 0",
-    scared: "M45 48 q5 -6 10 0",
-    angry: "M45 48 q5 -4 10 0",
-    sad: "M45 48 q5 -5 10 0",
-    wave: "M45 42 q5 5 10 0",
-    shocked: "M47 45 a3 4 0 1 0 6 0 a3 4 0 1 0 -6 0",
+    neutral: "M49 64 q5 4 10 0",
+    happy: "M42 61 q8 10 16 0",
+    scared: "M45 68 q5 -6 10 0",
+    angry: "M44 68 q6 -5 12 0",
+    sad: "M45 68 q5 -5 10 0",
+    wave: "M45 62 q6 6 12 0",
+    shocked: "M46 64 a4 5.5 0 1 0 8 0 a4 5.5 0 1 0 -8 0",
   };
-  const arms =
-    pose === "wave"
-      ? "M50 66 L36 74 M50 66 L66 50"
-      : up
-        ? "M50 66 L34 52 M50 66 L66 52"
-        : "M50 66 L36 74 M50 66 L64 74";
+  const BODY =
+    "M36 80 C26 94 20 116 26 134 Q31 148 50 148 Q69 148 74 134 C80 116 74 94 64 80 Z";
+  const down = ["M33 88 Q14 106 17 128", "M67 88 Q86 106 83 128"];
+  const raised = ["M33 88 Q16 80 14 62", "M67 88 Q84 80 86 62"];
+  const arms = pose === "wave" ? [down[0], raised[1]] : up ? raised : down;
+  const legs = [
+    [37, 1, "legL"],
+    [63, -1, "legR"],
+  ] as const;
+
+  // Two passes make arms, legs and body one silhouette: first every part in ink (slightly bigger),
+  // then every part in body color on top, so only the outer outline remains.
+  const parts = (ink: boolean) => (
+    <>
+      <path
+        d={BODY}
+        fill={ink ? INK : color}
+        stroke={ink ? INK : "none"}
+        strokeWidth="10"
+      />
+      {arms.map((d, i) => (
+        <path
+          key={d}
+          className={i === 0 ? "arm armL" : "arm armR"}
+          d={d}
+          stroke={ink ? INK : color}
+          strokeWidth={ink ? 21 : 11}
+        />
+      ))}
+      {legs.map(([x, dir, cls]) => (
+        <g key={cls} className={`leg ${cls}`}>
+          <path
+            d={`M${x} 140 L${x - dir * 3} 160`}
+            stroke={ink ? INK : color}
+            strokeWidth={ink ? 29 : 19}
+          />
+          <ellipse
+            cx={x - dir * 4}
+            cy="166"
+            rx="11"
+            ry="6"
+            fill={ink ? INK : color}
+            stroke={ink ? INK : "none"}
+            strokeWidth="10"
+          />
+        </g>
+      ))}
+    </>
+  );
+  const eye = (cx: number) => (
+    <g key={cx}>
+      <ellipse
+        cx={cx}
+        cy="48"
+        rx={rx}
+        ry={ry}
+        fill="#fff"
+        stroke={INK}
+        strokeWidth="3"
+      />
+      <circle cx={cx + 1.5} cy="48.5" r={pr} fill={INK} stroke="none" />
+      <circle cx={cx + 0.6} cy="46.5" r="1.2" fill="#fff" stroke="none" />
+    </g>
+  );
   return (
     <svg
-      viewBox="0 0 100 100"
+      viewBox="0 0 100 178"
       width={W}
-      height={W}
+      height={H}
       fill="none"
-      stroke={color}
-      strokeWidth="3.5"
+      stroke={INK}
+      strokeWidth="5"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
       <ellipse
         cx="50"
-        cy="97"
-        rx="18"
-        ry="3.5"
+        cy="175"
+        rx="20"
+        ry="2.5"
         fill="rgba(0,0,0,.18)"
         stroke="none"
       />
-      <path d="M50 60 V78" />
-      <path className="leg legL" d="M50 78 L41 93" />
-      <path className="leg legR" d="M50 78 L59 93" />
-      <path d={arms} />
-      <path d="M50 8 q-3 -6 4 -8" strokeWidth="3" />
-      <circle cx="50" cy="34" r="26" fill="#fff" />
-      <ellipse
-        cx="40"
-        cy="34"
-        rx={bigEyes ? 4 : 3.2}
-        ry={bigEyes ? 5.5 : 4}
-        fill={color}
-        stroke="none"
-      />
-      <ellipse
-        cx="60"
-        cy="34"
-        rx={bigEyes ? 4 : 3.2}
-        ry={bigEyes ? 5.5 : 4}
-        fill={color}
-        stroke="none"
-      />
-      <circle cx="41" cy="32.3" r="1.3" fill="#fff" stroke="none" />
-      <circle cx="61" cy="32.3" r="1.3" fill="#fff" stroke="none" />
-      <ellipse
-        cx="31"
-        cy="43"
-        rx="4.5"
-        ry="2.8"
-        fill="#ff9fb0"
-        opacity=".75"
-        stroke="none"
-      />
-      <ellipse
-        cx="69"
-        cy="43"
-        rx="4.5"
-        ry="2.8"
-        fill="#ff9fb0"
-        opacity=".75"
-        stroke="none"
-      />
+      {parts(true)}
+      {parts(false)}
+      <circle cx="50" cy="45" r="40" fill={color} />
+      {eye(39)}
+      {eye(61)}
       {pose === "angry" && (
-        <path strokeWidth="3" d="M33 24 l11 4 M67 24 l-11 4" />
+        <path strokeWidth="4" d="M28 31 l18 6 M72 31 l-18 6" />
       )}
       {pose === "sad" && (
-        <path strokeWidth="3" d="M33 27 l11 -4 M67 27 l-11 -4" />
+        <path strokeWidth="4" d="M28 37 l18 -6 M72 37 l-18 -6" />
       )}
-      <path strokeWidth="2.8" d={mouths[pose]} />
+      <path
+        strokeWidth="3.5"
+        d={mouths[pose]}
+        fill={pose === "shocked" ? INK : "none"}
+      />
     </svg>
   );
 }
@@ -121,7 +153,7 @@ function Stickman({ pose, color }: { pose: Pose; color: string }) {
 export default function App() {
   const [pos, setPos] = useState({
     x: window.innerWidth - 240,
-    y: window.innerHeight - 280,
+    y: window.innerHeight - 380,
   });
   const [pose, setPose] = useState<Pose>("neutral");
   const [color, setColor] = useState(COLORS[0]);
@@ -225,7 +257,7 @@ export default function App() {
     const p = S.current.pos;
     const id = ++walkId.current;
     const nx = clamp(x, 0, window.innerWidth - W);
-    const ny = clamp(y, 40, window.innerHeight - 110);
+    const ny = clamp(y, 40, window.innerHeight - H - 8);
     const ms = Math.max(500, (Math.hypot(nx - p.x, ny - p.y) / 70) * 1000); // ~70 px/s
     setFacing(nx < p.x ? -1 : 1);
     setMoveMs(ms);
@@ -275,7 +307,10 @@ export default function App() {
           l.map((o) => (o.id === od.id ? { ...o, x: nx, y: ny } : o)),
         );
         const p = S.current.pos;
-        const dist = Math.hypot(nx + 22 - (p.x + W / 2), ny + 22 - (p.y + 50));
+        const dist = Math.hypot(
+          nx + 22 - (p.x + W / 2),
+          ny + 22 - (p.y + H / 2),
+        );
         const emoji = S.current.objs.find((o) => o.id === od.id)?.emoji ?? "";
         if (dist < 130 && near.current !== od.id) {
           near.current = od.id;
@@ -301,10 +336,10 @@ export default function App() {
         const o = S.current.objs.find((x) => x.id === od.id),
           p = S.current.pos;
         if (!o) return;
-        if (Math.hypot(o.x + 22 - (p.x + W / 2), o.y + 22 - (p.y + 50)) < 70)
+        if (Math.hypot(o.x + 22 - (p.x + W / 2), o.y + 22 - (p.y + H / 2)) < 70)
           use(o); // dropped on the pet
         else
-          walkTo(o.x - 60, o.y - 40, () => {
+          walkTo(o.x - W, o.y + 44 - H, () => {
             const r = visit(o.emoji);
             sayLocal(
               r.pose,
@@ -405,11 +440,14 @@ export default function App() {
 
   const spawn = (emoji: string, name: string) => {
     const x = clamp(
-      pos.x + (pos.x > window.innerWidth / 2 ? -90 : 110),
+      pos.x + (pos.x > window.innerWidth / 2 ? -60 : 80),
       0,
       window.innerWidth - 50,
     );
-    setObjs((o) => [...o, { id: Date.now(), emoji, name, x, y: pos.y + 40 }]);
+    setObjs((o) => [
+      ...o,
+      { id: Date.now(), emoji, name, x, y: pos.y + H - 50 },
+    ]);
     const r = scripted(emoji, "spawn");
     sayLocal(r.pose, r.says, `The user placed ${name} ${emoji} next to me.`);
   };
@@ -448,7 +486,7 @@ export default function App() {
           left: pos.x,
           top: pos.y,
           transition: moveMs
-            ? `left ${moveMs}ms linear, top ${moveMs}ms linear`
+            ? `left ${moveMs}ms cubic-bezier(0.45, 0, 0.55, 1), top ${moveMs}ms cubic-bezier(0.45, 0, 0.55, 1)`
             : "none",
         }}
       >

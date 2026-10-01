@@ -14,7 +14,7 @@ body,
 }
 .wrap {
   position: absolute;
-  width: 96px;
+  width: 72px;
 }
 .pet {
   cursor: grab;
@@ -51,35 +51,71 @@ body,
 
 /* Walking: legs swing from the hip and the body bobs */
 .leg {
-  transform-origin: 50px 78px;
+  transform-origin: 50px 140px;
 }
+/* One stride = .56s. Legs swing from the hip, arms swing the opposite way, and the body bobs twice per
+   stride: low when the legs are apart, high when they pass each other. */
 .walking .legL {
-  animation: stepL 0.3s ease-in-out infinite alternate;
+  animation: stepL 0.56s ease-in-out infinite;
 }
 .walking .legR {
-  animation: stepR 0.3s ease-in-out infinite alternate;
+  animation: stepR 0.56s ease-in-out infinite;
+}
+.walking .armL {
+  transform-origin: 33px 88px;
+  animation: armL 0.56s ease-in-out infinite;
+}
+.walking .armR {
+  transform-origin: 67px 88px;
+  animation: armR 0.56s ease-in-out infinite;
 }
 .pet.walking svg {
-  animation: bob 0.3s ease-in-out infinite alternate;
+  animation: bob 0.56s ease-in-out infinite;
 }
 @keyframes stepL {
-  from {
-    transform: rotate(-28deg);
+  0%,
+  100% {
+    transform: rotate(-16deg);
   }
-  to {
-    transform: rotate(28deg);
+  50% {
+    transform: rotate(16deg);
   }
 }
 @keyframes stepR {
-  from {
-    transform: rotate(28deg);
+  0%,
+  100% {
+    transform: rotate(16deg);
   }
-  to {
-    transform: rotate(-28deg);
+  50% {
+    transform: rotate(-16deg);
+  }
+}
+@keyframes armL {
+  0%,
+  100% {
+    transform: rotate(8deg);
+  }
+  50% {
+    transform: rotate(-8deg);
+  }
+}
+@keyframes armR {
+  0%,
+  100% {
+    transform: rotate(-8deg);
+  }
+  50% {
+    transform: rotate(8deg);
   }
 }
 @keyframes bob {
-  to {
+  0%,
+  50%,
+  100% {
+    transform: translateY(0);
+  }
+  25%,
+  75% {
     transform: translateY(-3px);
   }
 }
