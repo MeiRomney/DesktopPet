@@ -52,14 +52,17 @@ function Stickman({ pose, color }: { pose: Pose; color: string }) {
   const down = ["M33 88 Q14 106 17 128", "M67 88 Q86 106 83 128"];
   const raised = ["M33 88 Q16 80 14 62", "M67 88 Q84 80 86 62"];
   const arms = pose === "wave" ? [down[0], raised[1]] : up ? raised : down;
-  const legs = [
-    [37, 1, "legL"],
-    [63, -1, "legR"],
-  ] as const;
 
-  // Two passes make arms, legs and body one silhouette: first every part in ink (slightly bigger),
-  // then every part in body color on top, so only the outer outline remains.
-  const parts = (ink: boolean) => (
+  // Among Us style legs: plain stubby legs, straight sides, flat rounded-off bottoms, no separate foot.
+  const legs = [
+    [37, "legL"],
+    [63, "legR"],
+  ] as const;
+  const stump = (x: number) =>
+    `M${x - 10.5} 124 H${x + 10.5} V164 Q${x + 10.5} 172 ${x + 2.5} 172 H${x - 2.5} Q${x - 10.5} 172 ${x - 10.5} 164 Z`;
+
+  // Body and arms are drawn in two passes (ink, then color) so they read as one silhouette.
+  const bodyAndArms = (ink: boolean) => (
     <>
       <path
         d={BODY}
@@ -75,24 +78,6 @@ function Stickman({ pose, color }: { pose: Pose; color: string }) {
           stroke={ink ? INK : color}
           strokeWidth={ink ? 21 : 11}
         />
-      ))}
-      {legs.map(([x, dir, cls]) => (
-        <g key={cls} className={`leg ${cls}`}>
-          <path
-            d={`M${x} 140 L${x - dir * 3} 160`}
-            stroke={ink ? INK : color}
-            strokeWidth={ink ? 29 : 19}
-          />
-          <ellipse
-            cx={x - dir * 4}
-            cy="166"
-            rx="11"
-            ry="6"
-            fill={ink ? INK : color}
-            stroke={ink ? INK : "none"}
-            strokeWidth="10"
-          />
-        </g>
       ))}
     </>
   );
@@ -130,8 +115,17 @@ function Stickman({ pose, color }: { pose: Pose; color: string }) {
         fill="rgba(0,0,0,.18)"
         stroke="none"
       />
-      {parts(true)}
-      {parts(false)}
+      {bodyAndArms(true)}
+      {/* Each leg keeps its own outline, so when one passes over the other the line shows between them. */}
+      {legs.map(([x, cls]) => (
+        <g key={cls} className={`legGap ${cls === "legL" ? "gapL" : "gapR"}`}>
+          <g className={`leg ${cls}`}>
+            <path d={stump(x)} fill={INK} stroke={INK} strokeWidth="10" />
+            <path d={stump(x)} fill={color} stroke="none" />
+          </g>
+        </g>
+      ))}
+      {bodyAndArms(false)}
       <circle cx="50" cy="45" r="40" fill={color} />
       {eye(39)}
       {eye(61)}
@@ -164,6 +158,7 @@ export default function App() {
   const [thinking, setThinking] = useState(false);
   const [facing, setFacing] = useState<1 | -1>(1);
   const [moveMs, setMoveMs] = useState(0); // >0 while walking by itself
+  const [stride, setStride] = useState(false); // leg animation on; ends at a stride boundary
   const [look, setLook] = useState(() => localStorage.getItem("look") === "1"); // off until you turn it on
 
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -188,8 +183,8 @@ export default function App() {
   const hovering = useRef(false);
   const busy = useRef(false);
   const lookOn = useRef(look);
-  const S = useRef({ pos, open, objs });
-  S.current = { pos, open, objs };
+  const S = useRef({ pos, open, objs, moveMs });
+  S.current = { pos, open, objs, moveMs };
   lookOn.current = look;
 
   // Let clicks through everywhere except over the pet, its panel and objects.
@@ -261,6 +256,7 @@ export default function App() {
     const ms = Math.max(500, (Math.hypot(nx - p.x, ny - p.y) / 70) * 1000); // ~70 px/s
     setFacing(nx < p.x ? -1 : 1);
     setMoveMs(ms);
+    setStride(true);
     setPos({ x: nx, y: ny });
     window.setTimeout(() => {
       if (walkId.current !== id) return;
@@ -416,6 +412,7 @@ export default function App() {
     const r = wrapRef.current!.getBoundingClientRect(); // grab it where it visually is, mid-walk or not
     walkId.current++;
     setMoveMs(0);
+    setStride(false);
     setPos({ x: r.left, y: r.top });
     drag.current = {
       dx: e.clientX - r.left,
@@ -493,8 +490,12 @@ export default function App() {
         {says && <div className="bubble">{says}</div>}
         {thinking && <div className="thinking">...</div>}
         <div
-          className={`pet ${pose}${moveMs ? " walking" : ""}`}
+          className={`pet ${pose}${stride ? " walking" : ""}`}
           onMouseDown={down}
+          onAnimationIteration={(e) => {
+            if (e.animationName.startsWith("step") && S.current.moveMs === 0)
+              setStride(false);
+          }}
         >
           <div style={{ transform: `scaleX(${facing})` }}>
             <Stickman pose={pose} color={color} />

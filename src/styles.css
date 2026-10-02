@@ -53,70 +53,181 @@ body,
 .leg {
   transform-origin: 50px 140px;
 }
-/* One stride = .56s. Legs swing from the hip, arms swing the opposite way, and the body bobs twice per
-   stride: low when the legs are apart, high when they pass each other. */
+.legGap {
+  transition: transform 0.25s ease-out;
+}
+.gapL {
+  transform: translateX(-2.5px);
+}
+.gapR {
+  transform: translateX(2.5px);
+}
+.walking .legGap {
+  transform: none;
+}
+/* Walking: a natural alternating step. The planted foot glides back under the body while the other foot lifts and
+   swings forward, so the legs barely overlap. The body bobs twice per stride, rolls gently from side to side and
+   leans a little into the walk. One stride = .55s; both feet are down at the start and end of every stride. */
 .walking .legL {
-  animation: stepL 0.56s ease-in-out infinite;
+  animation: stepL 0.55s linear infinite;
 }
 .walking .legR {
-  animation: stepR 0.56s ease-in-out infinite;
+  animation: stepR 0.55s linear infinite;
 }
 .walking .armL {
   transform-origin: 33px 88px;
-  animation: armL 0.56s ease-in-out infinite;
+  animation: armL 0.55s linear infinite;
 }
 .walking .armR {
   transform-origin: 67px 88px;
-  animation: armR 0.56s ease-in-out infinite;
+  animation: armR 0.55s linear infinite;
 }
 .pet.walking svg {
-  animation: bob 0.56s ease-in-out infinite;
+  animation: walkBody 0.55s linear infinite;
 }
 @keyframes stepL {
-  0%,
-  100% {
-    transform: rotate(-16deg);
+  0% {
+    transform: translate(2.1px, 0px);
+  }
+  12.5% {
+    transform: translate(1.1px, 0px);
+  }
+  25% {
+    transform: translate(0px, 0px);
+  }
+  37.5% {
+    transform: translate(-1.1px, 0px);
   }
   50% {
-    transform: rotate(16deg);
+    transform: translate(-2.1px, 0px);
+  }
+  62.5% {
+    transform: translate(-1.4px, -3.5px);
+  }
+  75% {
+    transform: translate(0px, -5px);
+  }
+  87.5% {
+    transform: translate(1.4px, -3.5px);
+  }
+  100% {
+    transform: translate(2.1px, 0px);
   }
 }
 @keyframes stepR {
-  0%,
-  100% {
-    transform: rotate(16deg);
+  0% {
+    transform: translate(-2.1px, 0px);
+  }
+  12.5% {
+    transform: translate(-1.4px, -3.5px);
+  }
+  25% {
+    transform: translate(0px, -5px);
+  }
+  37.5% {
+    transform: translate(1.4px, -3.5px);
   }
   50% {
-    transform: rotate(-16deg);
+    transform: translate(2.1px, 0px);
+  }
+  62.5% {
+    transform: translate(1.1px, 0px);
+  }
+  75% {
+    transform: translate(0px, 0px);
+  }
+  87.5% {
+    transform: translate(-1.1px, 0px);
+  }
+  100% {
+    transform: translate(-2.1px, 0px);
   }
 }
 @keyframes armL {
-  0%,
-  100% {
-    transform: rotate(8deg);
+  0% {
+    transform: rotate(0deg);
+  }
+  12.5% {
+    transform: rotate(4.9deg);
+  }
+  25% {
+    transform: rotate(7deg);
+  }
+  37.5% {
+    transform: rotate(4.9deg);
   }
   50% {
-    transform: rotate(-8deg);
+    transform: rotate(0deg);
+  }
+  62.5% {
+    transform: rotate(-4.9deg);
+  }
+  75% {
+    transform: rotate(-7deg);
+  }
+  87.5% {
+    transform: rotate(-4.9deg);
+  }
+  100% {
+    transform: rotate(-0deg);
   }
 }
 @keyframes armR {
-  0%,
-  100% {
-    transform: rotate(-8deg);
+  0% {
+    transform: rotate(-0deg);
+  }
+  12.5% {
+    transform: rotate(-4.9deg);
+  }
+  25% {
+    transform: rotate(-7deg);
+  }
+  37.5% {
+    transform: rotate(-4.9deg);
   }
   50% {
-    transform: rotate(8deg);
+    transform: rotate(-0deg);
+  }
+  62.5% {
+    transform: rotate(4.9deg);
+  }
+  75% {
+    transform: rotate(7deg);
+  }
+  87.5% {
+    transform: rotate(4.9deg);
+  }
+  100% {
+    transform: rotate(0deg);
   }
 }
-@keyframes bob {
-  0%,
-  50%,
-  100% {
-    transform: translateY(0);
+@keyframes walkBody {
+  0% {
+    transform: translateY(0px) rotate(1deg);
   }
-  25%,
+  12.5% {
+    transform: translateY(-1.5px) rotate(0.3deg);
+  }
+  25% {
+    transform: translateY(-3px) rotate(0deg);
+  }
+  37.5% {
+    transform: translateY(-1.5px) rotate(0.3deg);
+  }
+  50% {
+    transform: translateY(0px) rotate(1deg);
+  }
+  62.5% {
+    transform: translateY(-1.5px) rotate(1.7deg);
+  }
   75% {
-    transform: translateY(-3px);
+    transform: translateY(-3px) rotate(2deg);
+  }
+  87.5% {
+    transform: translateY(-1.5px) rotate(1.7deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(1deg);
   }
 }
 
