@@ -1,0 +1,10 @@
+.pet { cursor: grab; filter: drop-shadow(0 0 2px #fff) drop-shadow(0 2px 4px rgba(0,0,0,.3)); user-select: none; }
+.pet:active { cursor: grabbing; }
+.pet.scared, .pet.shocked { animation: shake .12s infinite; }
+@keyframes shake { 50% { transform: translateX(3px) rotate(1deg); } }
+
+.pet svg { animation: breathe 3s ease-in-out infinite; transform-origin: bottom center; display: block; }
+@keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03) translateY(-2px); } }
+
+/* Pupils: start glancing slightly to the side; the app moves them to follow the mouse */
+.pupil { transform: translate(1.5px, .5px); transition: transform .07s ease-out; }

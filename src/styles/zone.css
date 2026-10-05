@@ -1,0 +1,6 @@
+.zoneOverlay { position: fixed; inset: 0; z-index: 100; cursor: crosshair; background: rgba(184, 169, 255, .14); }
+.zoneHint { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); padding: 8px 16px; background: #fff; color: var(--ink);
+  border: 2px solid var(--ink); border-radius: 999px; box-shadow: 2px 2px 0 var(--ink); font-size: 13px; font-weight: 600; pointer-events: none; }
+.zoneBox { position: fixed; z-index: 4; box-sizing: border-box; pointer-events: none; border: 2px dashed var(--ink); border-radius: 12px; background: rgba(184, 169, 255, .12); }
+.zoneBox.drawing { z-index: 101; background: rgba(184, 169, 255, .3); }
+
