@@ -2,13 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Pose } from "../reactions";
 import { AI_CHANCE } from "../constants";
 import type { PetCore } from "./usePetCore";
-
-export type LookEvery = "often" | "normal" | "rare";
-export const LOOK_RANGES: Record<LookEvery, [number, number]> = {
-  often: [2, 4],
-  normal: [8, 15],
-  rare: [20, 40],
-}; // minutes
+import { LOOK_RANGES, useLookSettings } from "./useLookSettings";
 
 /** Everything the pet says: bubbles, scripted lines, and the AI (chat replies, random reactions, screen glances). */
 export function useSpeech(c: PetCore) {
@@ -16,17 +10,9 @@ export function useSpeech(c: PetCore) {
   const [says, setSays] = useState("");
   const [thinking, setThinking] = useState(false);
   const [userSays, setUserSays] = useState(""); // what you just typed, shown for a few seconds
-  const [look, setLook] = useState(() => localStorage.getItem("look") === "1"); // off until you turn it on
-  const [lookEvery, setLookEveryState] = useState<LookEvery>(() => {
-    const v = localStorage.getItem("lookEvery");
-    return v === "often" || v === "rare" ? v : "normal";
-  });
+  const { look, toggleLook, lookEvery, setLookEvery } = useLookSettings();
   const lookRange = useRef(lookEvery);
   lookRange.current = lookEvery;
-  const setLookEvery = (v: LookEvery) => {
-    setLookEveryState(v);
-    localStorage.setItem("lookEvery", v);
-  };
   const bubbleTimer = useRef<number>();
   const userTimer = useRef<number>();
   const lookOn = useRef(look);
@@ -97,12 +83,6 @@ export function useSpeech(c: PetCore) {
       setPose("sad");
       showBubble(`I could not look. Is the vision model pulled? (${r.error})`);
     }
-  };
-
-  const toggleLook = () => {
-    const n = !look;
-    setLook(n);
-    localStorage.setItem("look", n ? "1" : "0");
   };
 
   // Every 8-15 minutes, if you enabled it, take a glance at the desktop.

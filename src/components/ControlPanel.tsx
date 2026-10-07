@@ -1,27 +1,34 @@
-import { useEffect, useRef, useState } from "react";
-import type { PointerEvent as RPointerEvent, ReactNode } from "react";
+import { useState } from "react";
+import type { ReactNode } from "react";
 import { COLORS } from "../constants";
 import { ITEMS } from "../reactions";
 import type { Pose } from "../reactions";
 import type { RoamMode } from "../types";
 import type { Appearance } from "../hooks/useAppearance";
-import type { LookEvery, Speech } from "../hooks/useSpeech";
+import type { LookEvery } from "../hooks/useLookSettings";
+import type { useQuickToys } from "../hooks/useQuickToys";
 import type { useZone } from "../hooks/useZone";
 import { Stickman } from "./Stickman";
 
 type Zone = ReturnType<typeof useZone>;
-type Hover = { onMouseEnter(): void; onMouseLeave(): void };
+export type CameraApi = {
+  look: boolean;
+  toggleLook(): void;
+  lookEvery: LookEvery;
+  setLookEvery(v: LookEvery): void;
+  thinking: boolean;
+  lookNow(): void;
+};
 
 type Props = {
   appearance: Appearance;
-  speech: Speech;
+  camera: CameraApi;
   zone: Zone;
   size: number;
   onSize(v: number): void;
+  quick: ReturnType<typeof useQuickToys>;
   onSpawn(emoji: string, name: string): void;
   onStartZone(): void;
-  onClose(): void;
-  hover: Hover;
 };
 
 // ---- Small building blocks used by every tab ----
@@ -264,7 +271,7 @@ const EVERY_TEXT: Record<LookEvery, string> = {
   normal: "about every 8-15 minutes",
   rare: "about every 20-40 minutes",
 };
-function CameraTab({ s }: { s: Speech }) {
+function CameraTab({ s }: { s: CameraApi }) {
   return (
     <>
       <Section
@@ -297,7 +304,7 @@ function CameraTab({ s }: { s: Speech }) {
         <button
           className="pill"
           disabled={s.thinking}
-          onClick={() => s.lookAround(true)}
+          onClick={() => s.lookNow}
         >
           {s.thinking ? "Looking..." : "📸 Look now"}
         </button>
@@ -416,25 +423,51 @@ function ZoneTab({ z, onStartZone }: { z: Zone; onStartZone(): void }) {
   );
 }
 
-function ToysTab({ onSpawn }: { onSpawn(emoji: string, name: string): void }) {
+function ToysTab({
+  onSpawn,
+  quick,
+}: {
+  onSpawn(emoji: string, name: string): void;
+  quick: Props["quick"];
+}) {
   return (
-    <Section
-      title="Toys"
-      hint="Drop an object next to the pet, then drag it around. Dropping one on the pet uses it."
-    >
-      <div className="cpToys">
-        {ITEMS.map(([e, n]) => (
-          <button
-            key={e}
-            className="toy big"
-            title={`Drop ${n}`}
-            onClick={() => onSpawn(e, n)}
-          >
-            {e}
-          </button>
-        ))}
-      </div>
-    </Section>
+    <>
+      <Section
+        title="Toys"
+        hint="Drop an object next to the pet, then drag it around. Dropping one on the pet uses it."
+      >
+        <div className="cpToys">
+          {ITEMS.map(([e, n]) => (
+            <button
+              key={e}
+              className="toy big"
+              title={`Drop ${n}`}
+              onClick={() => onSpawn(e, n)}
+            >
+              {e}
+            </button>
+          ))}
+        </div>
+      </Section>
+      <Section
+        title="Pet menu shortcuts"
+        hint="Choose the two toys that show on the pet menu when you click the pet. Picking a new one replaces the older choice."
+      >
+        <div className="cpToys">
+          {ITEMS.map(([e, n]) => (
+            <button
+              key={e}
+              className={`toy big pick${quick.quick.includes(e) ? " on" : ""}`}
+              aria-pressed={quick.quick.includes(e)}
+              title={`Show ${n} on the pet menu`}
+              onClick={() => quick.pick(e)}
+            >
+              {e}
+            </button>
+          ))}
+        </div>
+      </Section>
+    </>
   );
 }
 
@@ -472,7 +505,7 @@ const TABS: (Tab | "divider")[] = [
     id: "camera",
     icon: "📸",
     label: "Camera",
-    render: (p) => <CameraTab s={p.speech} />,
+    render: (p) => <CameraTab s={p.camera} />,
   },
   {
     id: "size",
@@ -490,7 +523,7 @@ const TABS: (Tab | "divider")[] = [
     id: "toys",
     icon: "🧸",
     label: "Toys",
-    render: (p) => <ToysTab onSpawn={p.onSpawn} />,
+    render: (p) => <ToysTab onSpawn={p.onSpawn} quick={p.quick} />,
   },
   "divider",
   {
@@ -547,98 +580,34 @@ const TABS: (Tab | "divider")[] = [
   },
 ];
 
-const PANEL_W = 580,
-  PANEL_H = 420;
-
-/** The control panel: a movable window with tabs. Opened from the tray menu or Ctrl+Alt+O. */
+/** The control panel. It fills its own window, so the title bar, minimize, maximize, resize and close are the system's. */
 export function ControlPanel(props: Props) {
-  const { hover, onClose } = props;
   const [tab, setTab] = useState("colors");
-  const [at, setAt] = useState(() => ({
-    x: Math.max(8, (window.innerWidth - PANEL_W) / 2),
-    y: Math.max(8, (window.innerHeight - PANEL_H) / 2),
-  }));
-  const grab = useRef<{ dx: number; dy: number } | null>(null);
-
-  useEffect(() => {
-    const key = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", key);
-    return () => window.removeEventListener("keydown", key);
-  }, []);
-
-  const down = (e: RPointerEvent) => {
-    if ((e.target as HTMLElement).closest("button")) return;
-    e.currentTarget.setPointerCapture(e.pointerId);
-    grab.current = { dx: e.clientX - at.x, dy: e.clientY - at.y };
-  };
-  const move = (e: RPointerEvent) => {
-    if (!grab.current) return;
-    setAt({
-      x: Math.min(
-        Math.max(e.clientX - grab.current.dx, 0),
-        window.innerWidth - 120,
-      ),
-      y: Math.min(
-        Math.max(e.clientY - grab.current.dy, 0),
-        window.innerHeight - 48,
-      ),
-    });
-  };
-  const up = () => {
-    grab.current = null;
-  };
-
   const current =
     TABS.find((t): t is Tab => t !== "divider" && t.id === tab) ??
     (TABS[0] as Tab);
   return (
-    <div
-      className="cp"
-      role="dialog"
-      aria-label="Control panel"
-      style={{ left: at.x, top: at.y, width: PANEL_W, height: PANEL_H }}
-      {...hover}
-    >
-      <header
-        className="cpHead"
-        onPointerDown={down}
-        onPointerMove={move}
-        onPointerUp={up}
-      >
-        <span className="cpTitle">Control panel</span>
-        <button
-          className="cpClose"
-          aria-label="Close"
-          title="Close (Esc)"
-          onClick={onClose}
-        >
-          ✕
-        </button>
-      </header>
-      <div className="cpBody">
-        <nav className="cpNav">
-          {TABS.map((t, i) =>
-            t === "divider" ? (
-              <div key={i} className="cpDivider">
-                Soon
-              </div>
-            ) : (
-              <button
-                key={t.id}
-                className={`cpTab${t.id === current.id ? " on" : ""}`}
-                aria-current={t.id === current.id}
-                onClick={() => setTab(t.id)}
-              >
-                <span>{t.icon}</span>
-                {t.label}
-              </button>
-            ),
-          )}
-        </nav>
-        <div className="cpContent">{current.render(props)}</div>
-      </div>
+    <div className="cp">
+      <nav className="cpNav">
+        {TABS.map((t, i) =>
+          t === "divider" ? (
+            <div key={i} className="cpDivider">
+              Soon
+            </div>
+          ) : (
+            <button
+              key={t.id}
+              className={`cpTab${t.id === current.id ? " on" : ""}`}
+              aria-current={t.id === current.id}
+              onClick={() => setTab(t.id)}
+            >
+              <span>{t.icon}</span>
+              {t.label}
+            </button>
+          ),
+        )}
+      </nav>
+      <div className="cpContent">{current.render(props)}</div>
     </div>
   );
 }

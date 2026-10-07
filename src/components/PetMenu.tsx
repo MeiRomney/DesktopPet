@@ -1,38 +1,48 @@
+import { useEffect } from "react";
 import type { CSSProperties, Ref } from "react";
+import { ITEMS } from "../reactions";
 
 type Props = {
   panelRef: Ref<HTMLDivElement>;
-  placed?: CSSProperties; // placed = where to put the card when there is no room below the pet
+  placed?: CSSProperties; // placed = where to put the menu when there is no room below the pet
+  quick: [string, string]; // the two toys chosen in the control panel
   onSpawn(emoji: string, name: string): void;
+  onOpenPanel(): void;
   text: string;
   onText(t: string): void;
   onSend(): void;
   onClose(): void;
 };
 
-const QUICK: [string, string][] = [
-  ["🔫", "a gun"],
-  ["🗡️", "a sword"],
-];
-
-/** The small card that opens when you click the pet: two weapons, a chat box, and a way out. Everything else lives in the control panel. */
+/** What opens when you click the pet: no card, just your two toys, a button for the control panel, and the chat box. Esc or clicking the pet again closes it. */
 export function PetMenu({
   panelRef,
   placed,
+  quick,
   onSpawn,
+  onOpenPanel,
   text,
   onText,
   onSend,
   onClose,
 }: Props) {
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, []);
+
+  const toys = quick.flatMap((e) => ITEMS.filter(([x]) => x === e));
   return (
     <div
       ref={panelRef}
       className={`panel${placed ? " placed" : ""}`}
       style={placed}
     >
-      <div className="toys two">
-        {QUICK.map(([e, n]) => (
+      <div className="toys three">
+        {toys.map(([e, n]) => (
           <button
             key={e}
             className="toy big"
@@ -42,6 +52,14 @@ export function PetMenu({
             {e}
           </button>
         ))}
+        <button
+          className="toy big"
+          title="Open control panel"
+          aria-label="Open control panel"
+          onClick={onOpenPanel}
+        >
+          ⚙️
+        </button>
       </div>
       <div className="chat">
         <input
@@ -60,9 +78,6 @@ export function PetMenu({
           ↑
         </button>
       </div>
-      <button className="nevermind" onClick={onClose}>
-        Never mind
-      </button>
     </div>
   );
 }

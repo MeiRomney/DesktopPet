@@ -17,7 +17,7 @@ const MODEL = process.env.PET_MODEL || "llama3.2:3b"; // change with PET_MODEL
 const VISION_MODEL = process.env.PET_VISION_MODEL || "gemma3:4b"; // must support images
 const OLLAMA = "http://127.0.0.1:11434/api/chat";
 const POSES = ["neutral", "happy", "scared", "angry", "sad", "shocked"];
-let win, tray, tracker;
+let win, ctrl, tray, tracker;
 let autoHidden = false; // hidden by us because a fullscreen app is in front (not by you)
 
 const PERSONA = `You are Stick, a small living stickman on the user's desktop. You have real feelings, opinions and a memory. Be funny, expressive and consistent with what you remember (grudges, favorites, fears). Everything is cartoon slapstick: react dramatically but never gruesomely. "says" must be under 14 words. "note" is a short first-person memory of what just happened.`;
@@ -141,6 +141,9 @@ ipcMain.handle("react", async (_e, event) => {
 });
 
 // ---- window ----
+const DEV_URL = "http://127.0.0.1:5173";
+const PROD_FILE = path.join(__dirname, "../dist/index.html");
+
 function createWindow() {
   const { x, y, width, height } = screen.getPrimaryDisplay().bounds;
   win = new BrowserWindow({
@@ -158,9 +161,37 @@ function createWindow() {
     webPreferences: { preload: path.join(__dirname, "preload.cjs") },
   });
   win.setAlwaysOnTop(true, "screen-saver");
-  win.setIgnoreMouseEvents(true, { forward: true }); // click-through by default
-  if (process.env.PET_DEV) win.loadURL("http://127.0.0.1:5173");
-  else win.loadFile(path.join(__dirname, "../dist/index.html"));
+  win.setIgnoreMouseEvents(true, { forward: true });
+  if (process.env.PET_DEV) win.loadURL(DEV_URL);
+  else win.loadFile(PROD_FILE);
+}
+
+// The control panel is the "real" app window. Closing it quits the app, so the pet disappears too.
+function createControlWindow() {
+  ctrl = new BrowserWindow({
+    width: 760,
+    height: 520,
+    minWidth: 560,
+    minHeight: 380,
+    title: "Stick: Control panel",
+    icon: path.join(__dirname, "../assets/icon.png"),
+    backgroundColor: "#ffffff",
+    autoHideMenuBar: true,
+    webPreferences: { preload: path.join(__dirname, "preload.cjs") },
+  });
+  ctrl.setMenuBarVisibility(false);
+  ctrl.webContents.on("before-input-event", (e, input) => {
+    if (input.type === "keyDown" && input.key === "F11") {
+      ctrl.setFullScreen(!ctrl.isFullScreen());
+      e.preventDefault();
+    }
+  });
+  ctrl.on("closed", () => {
+    ctrl = null;
+    app.quit();
+  });
+  if (process.env.PET_DEV) ctrl.loadURL(DEV_URL + "#control");
+  else ctrl.loadFile(PROD_FILE, { hash: "control" });
 }
 
 const toggle = () => {
@@ -169,15 +200,15 @@ const toggle = () => {
 };
 
 const openControl = () => {
-  if (!win || win.isDestroyed()) return;
-  autoHidden = false;
-  if (!win.isVisible()) win.show();
-  win.focus();
-  win.webContents.send("open-control");
+  if (!ctrl || ctrl.isDestroyed()) return;
+  if (ctrl.isMinimized()) ctrl.restore();
+  ctrl.show();
+  ctrl.focus();
 };
 
 app.whenReady().then(() => {
   createWindow();
+  createControlWindow();
   // Edges mode: follow the foreground window, and step aside while a fullscreen app is in front.
   tracker = createTracker((w) => {
     if (!win || win.isDestroyed()) return;
@@ -211,6 +242,26 @@ ipcMain.on(
   (_e, on) => win && win.setIgnoreMouseEvents(on, { forward: true }),
 );
 ipcMain.on("hide", () => win && win.hide());
+ipcMain.on("open-control", openControl);
+
+// Relay messages between the pet window and the control panel window.
+ipcMain.on("bus", (e, msg) => {
+  const fromPet = win && e.sender === win.webContents;
+  const target = fromPet ? ctrl : win;
+  if (!msg || !target || target.isDestroyed()) return;
+  if (msg.type === "drawZone") {
+    // draw on the overlay: get the panel out of the way
+    if (ctrl) ctrl.minimize();
+    autoHidden = false;
+    if (!win.isVisible()) win.show();
+    win.focus();
+  }
+  if (msg.type === "zoneDone" && ctrl) {
+    ctrl.restore();
+    ctrl.focus();
+  }
+  target.webContents.send("bus", msg);
+});
 
 // The usable screen area (everything except the taskbar), relative to the overlay's top-left corner.
 ipcMain.handle("work-area", () => {

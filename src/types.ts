@@ -25,7 +25,14 @@ export type Eyes = {
   track: boolean;
 };
 
-// The bridge exposed to the page by electron/preload.cjs
+/** Messages between the control panel window and the pet window (relayed by the main process). */
+export type BusMsg =
+  | { type: "spawn"; emoji: string; name: string }
+  | { type: "drawZone" }
+  | { type: "zoneDone" }
+  | { type: "lookNow" }
+  | { type: "thinking"; on: boolean };
+
 declare global {
   interface Window {
     api: {
@@ -36,7 +43,8 @@ declare global {
       hide(): void;
       workArea(): Promise<Rect>;
       trackWindows(on: boolean): void;
-      onOpenControl(cb: () => void): () => void;
+      openControl(): void;
+      bus: { send(m: BusMsg): void; on(cb: (m: BusMsg) => void): () => void };
       onActiveWindow(cb: (w: WinRect | null) => void): () => void;
     };
   }

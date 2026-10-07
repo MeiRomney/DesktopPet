@@ -1,19 +1,10 @@
 /* Control panel: a movable sticker window with tabs on the left */
 .cp {
   position: fixed;
+  inset: 0;
   display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  max-width: calc(100vw - 16px);
-  max-height: calc(100vh - 16px);
   background: #fff;
   color: var(--ink);
-  border: 2px solid var(--ink);
-  border-radius: 18px;
-  box-shadow: 4px 4px 0 var(--ink);
-  overflow: hidden;
-  animation: cpIn 0.15s ease-out;
-  z-index: 50;
 }
 @keyframes cpIn {
   from {
@@ -24,44 +15,6 @@
     opacity: 1;
     transform: none;
   }
-}
-.cpHead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 10px 8px 16px;
-  border-bottom: 2px solid var(--ink);
-  background: var(--lilac-soft);
-  cursor: grab;
-  user-select: none;
-  touch-action: none;
-}
-.cpHead:active {
-  cursor: grabbing;
-}
-.cpTitle {
-  font-weight: 700;
-  font-size: 14px;
-}
-.cpClose {
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: 2px solid var(--ink);
-  border-radius: 50%;
-  background: #fff;
-  font-size: 12px;
-  line-height: 1;
-  cursor: pointer;
-  color: var(--ink);
-}
-.cpClose:hover {
-  background: var(--lilac);
-}
-.cpBody {
-  flex: 1;
-  min-height: 0;
-  display: flex;
 }
 .cpNav {
   width: 136px;
@@ -118,7 +71,7 @@
   align-items: flex-start;
 }
 .cpContent > * {
-  max-width: 100%;
+  max-width: min(100%, 560px);
 }
 .cpSection {
   display: flex;
@@ -311,9 +264,19 @@
 }
 
 /* Pet menu (the small card when you click the pet) */
-.toys.two {
-  grid-template-columns: repeat(2, 1fr);
+.toys.three {
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
+}
+
+.toy.pick.on {
+  background: var(--lilac);
+  border-color: var(--ink);
+}
+html.ctrlWin,
+.ctrlWin body,
+.ctrlWin #root {
+  background: #fff;
 }
 .toy.big {
   font-size: 28px;

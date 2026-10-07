@@ -8,11 +8,14 @@ contextBridge.exposeInMainWorld("api", {
   hide: () => ipcRenderer.send("hide"),
   workArea: () => ipcRenderer.invoke("work-area"), // screen minus the taskbar
   trackWindows: (on) => ipcRenderer.send("track-windows", on), // follow the foreground window (Edges mode)
-  onOpenControl: (cb) => {
-    // tray menu / Ctrl+Alt+O
-    const h = () => cb();
-    ipcRenderer.on("open-control", h);
-    return () => ipcRenderer.removeListener("open-control", h);
+  openControl: () => ipcRenderer.send("open-control"),
+  bus: {
+    send: (msg) => ipcRenderer.send("bus", msg),
+    on: (cb) => {
+      const h = (_e, m) => cb(m);
+      ipcRenderer.on("bus", h);
+      return () => ipcRenderer.removeListener("bus", h);
+    },
   },
   onActiveWindow: (cb) => {
     const h = (_e, w) => cb(w);

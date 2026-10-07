@@ -1,6 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { ControlPanel } from "./components/ControlPanel";
 import { PetMenu } from "./components/PetMenu";
 import { SpeechBubbles } from "./components/SpeechBubbles";
 import { Stickman } from "./components/Stickman";
@@ -12,8 +11,10 @@ import { useInteractions } from "./hooks/useInteractions";
 import { useMovement } from "./hooks/useMovement";
 import { usePetCore } from "./hooks/usePetCore";
 import { usePupilTracking } from "./hooks/usePupilTracking";
+import { useQuickToys } from "./hooks/useQuickToys";
 import { useSpeech } from "./hooks/useSpeech";
 import { useZone } from "./hooks/useZone";
+import type { BusMsg } from "./types";
 import { clamp } from "./utils";
 
 const PANEL_W = 236; // width of the small pet menu
@@ -27,9 +28,9 @@ export default function App() {
   useEdges(core, move, zone.edges);
   const appearance = useAppearance();
   usePupilTracking(core, appearance.eyes);
+  const quick = useQuickToys();
 
   const [text, setText] = useState("");
-  const [controlOpen, setControlOpen] = useState(false); // the control panel (tray menu or Ctrl+Alt+O)
   const {
     pos,
     pose,
@@ -40,8 +41,6 @@ export default function App() {
     moveMs,
     stride,
     setStride,
-    size,
-    changeSize,
     W,
     H,
     wrapRef,
@@ -49,27 +48,38 @@ export default function App() {
     S,
   } = core;
 
-  useEffect(
-    () =>
-      window.api.onOpenControl(() => {
-        setOpen(false);
-        setControlOpen(true);
-      }),
-    [],
-  );
-  const closeControl = () => {
-    core.hovering.current = false;
-    window.api.clickThrough(true);
-    setControlOpen(false);
+  // Commands from the control panel window.
+  const onCmd = useRef<(m: BusMsg) => void>(() => {});
+  onCmd.current = (m) => {
+    if (m.type === "spawn") act.spawn(m.emoji, m.name);
+    else if (m.type === "lookNow") speech.lookAround(true);
+    else if (m.type === "drawZone") {
+      core.hovering.current = false;
+      setOpen(false);
+      zone.startZone();
+    }
   };
-  const beginZone = () => {
-    core.hovering.current = false;
-    zone.startZone();
-  }; // the panel hides while you draw
+  useEffect(() => window.api.bus.on((m) => onCmd.current(m)), []);
+
+  // Tell the control panel when the pet is busy, and when you finished (or cancelled) drawing a box.
+  useEffect(() => {
+    window.api.bus.send({ type: "thinking", on: speech.thinking });
+  }, [speech.thinking]);
+  const wasDrawing = useRef(false);
+  useEffect(() => {
+    if (wasDrawing.current && !zone.drawing)
+      window.api.bus.send({ type: "zoneDone" });
+    wasDrawing.current = zone.drawing;
+  }, [zone.drawing]);
+
   const closeMenu = () => {
     core.hovering.current = false;
     window.api.clickThrough(true);
     setOpen(false);
+  };
+  const openPanel = () => {
+    closeMenu();
+    window.api.openControl();
   };
 
   const send = () => {
@@ -86,21 +96,20 @@ export default function App() {
     speech.say(`The user said to you: "${t}"`);
   };
 
-  // The pet's box on screen.
   const vl = pos.x,
     vt = pos.y,
     vw = W,
     vh = H;
 
-  // The panel normally opens below the pet. On the taskbar there is no room below, so it opens beside the pet instead.
+  // The menu normally opens below the pet. On the taskbar there is no room below, so it opens beside the pet.
   const panelEl = useRef<HTMLDivElement>(null);
-  const [panelH, setPanelH] = useState(260);
+  const [panelH, setPanelH] = useState(100);
   useLayoutEffect(() => {
     const h = panelEl.current?.offsetHeight;
     if (open && h && Math.abs(h - panelH) > 1) setPanelH(h);
   });
   let panelPlace: CSSProperties | undefined;
-  let lift = 0; // how far the pet's speech bubble must rise to clear a panel that sticks up beside the pet
+  let lift = 0;
   if (open) {
     const vw2 = window.innerWidth,
       vh2 = window.innerHeight;
@@ -126,7 +135,7 @@ export default function App() {
     left: pos.x,
     top: pos.y,
     width: W,
-    "--lift": `${lift}px`, // --lift: raises the speech bubble clear of a panel that sticks up beside the pet
+    "--lift": `${lift}px`,
     transition: moveMs
       ? `left ${moveMs}ms cubic-bezier(0.45, 0, 0.55, 1), top ${moveMs}ms cubic-bezier(0.45, 0, 0.55, 1)`
       : "none",
@@ -134,9 +143,7 @@ export default function App() {
 
   return (
     <>
-      {zone.active && (open || controlOpen || zone.flash) && (
-        <ZoneBox rect={zone.active} />
-      )}
+      {zone.active && (open || zone.flash) && <ZoneBox rect={zone.active} />}
       <WorldObjects objs={objs} hover={hover} onDown={act.objDown} />
       <div ref={wrapRef} className="wrap" {...hover} style={wrapStyle}>
         <SpeechBubbles
@@ -167,7 +174,9 @@ export default function App() {
           <PetMenu
             panelRef={panelEl}
             placed={panelPlace}
+            quick={quick.quick}
             onSpawn={act.spawn}
+            onOpenPanel={openPanel}
             text={text}
             onText={setText}
             onSend={send}
@@ -175,19 +184,6 @@ export default function App() {
           />
         )}
       </div>
-      {controlOpen && !zone.drawing && (
-        <ControlPanel
-          appearance={appearance}
-          speech={speech}
-          zone={zone}
-          size={size}
-          onSize={changeSize}
-          onSpawn={act.spawn}
-          onStartZone={beginZone}
-          onClose={closeControl}
-          hover={hover}
-        />
-      )}
       {zone.drawing && (
         <ZoneOverlay
           draft={zone.draft}
