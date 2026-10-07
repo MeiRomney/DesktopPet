@@ -1,0 +1,3 @@
+.obj { position: absolute; font-size: 44px; line-height: 1; cursor: grab; user-select: none; z-index: 5; filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
+.obj:active { cursor: grabbing; }
+

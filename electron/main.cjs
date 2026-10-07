@@ -11,12 +11,14 @@ const {
 } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const { createTracker } = require("./windows.cjs");
 
 const MODEL = process.env.PET_MODEL || "llama3.2:3b"; // change with PET_MODEL
 const VISION_MODEL = process.env.PET_VISION_MODEL || "gemma3:4b"; // must support images
 const OLLAMA = "http://127.0.0.1:11434/api/chat";
 const POSES = ["neutral", "happy", "scared", "angry", "sad", "shocked"];
-let win, tray;
+let win, tray, tracker;
+let autoHidden = false; // hidden by us because a fullscreen app is in front (not by you)
 
 const PERSONA = `You are Stick, a small living stickman on the user's desktop. You have real feelings, opinions and a memory. Be funny, expressive and consistent with what you remember (grudges, favorites, fears). Everything is cartoon slapstick: react dramatically but never gruesomely. "says" must be under 14 words. "note" is a short first-person memory of what just happened.`;
 const REACT_SCHEMA = {
@@ -161,22 +163,47 @@ function createWindow() {
   else win.loadFile(path.join(__dirname, "../dist/index.html"));
 }
 
-const toggle = () => (win.isVisible() ? win.hide() : win.show());
+const toggle = () => {
+  autoHidden = false;
+  win.isVisible() ? win.hide() : win.show();
+};
+
+const openControl = () => {
+  if (!win || win.isDestroyed()) return;
+  autoHidden = false;
+  if (!win.isVisible()) win.show();
+  win.focus();
+  win.webContents.send("open-control");
+};
 
 app.whenReady().then(() => {
   createWindow();
+  // Edges mode: follow the foreground window, and step aside while a fullscreen app is in front.
+  tracker = createTracker((w) => {
+    if (!win || win.isDestroyed()) return;
+    win.webContents.send("active-window", w);
+    if (w && w.fullscreen && win.isVisible()) {
+      win.hide();
+      autoHidden = true;
+    } else if (!(w && w.fullscreen) && autoHidden) {
+      autoHidden = false;
+      win.showInactive();
+    }
+  });
   tray = new Tray(
     nativeImage.createFromPath(path.join(__dirname, "../assets/icon.png")),
   );
   tray.setToolTip("Stick");
   tray.setContextMenu(
     Menu.buildFromTemplate([
+      { label: "Control Panel", click: openControl },
       { label: "Show / Hide", click: toggle },
       { label: "Quit", click: () => app.quit() },
     ]),
   );
   tray.on("click", toggle);
   globalShortcut.register("Control+Alt+P", toggle);
+  globalShortcut.register("Control+Alt+O", openControl);
 });
 
 ipcMain.on(
@@ -184,4 +211,29 @@ ipcMain.on(
   (_e, on) => win && win.setIgnoreMouseEvents(on, { forward: true }),
 );
 ipcMain.on("hide", () => win && win.hide());
-app.on("will-quit", () => globalShortcut.unregisterAll());
+
+// The usable screen area (everything except the taskbar), relative to the overlay's top-left corner.
+ipcMain.handle("work-area", () => {
+  const d = screen.getPrimaryDisplay();
+  return {
+    x: d.workArea.x - d.bounds.x,
+    y: d.workArea.y - d.bounds.y,
+    w: d.workArea.width,
+    h: d.workArea.height,
+  };
+});
+ipcMain.on("track-windows", (_e, on) => {
+  if (!tracker) return;
+  if (on) tracker.start();
+  else {
+    tracker.stop();
+    if (autoHidden && win) {
+      autoHidden = false;
+      win.showInactive();
+    }
+  }
+});
+app.on("will-quit", () => {
+  globalShortcut.unregisterAll();
+  if (tracker) tracker.stop();
+});
