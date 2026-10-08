@@ -32,7 +32,8 @@ export type BusMsg =
   | { type: "zoneDone" }
   | { type: "lookNow" }
   | { type: "emote"; id: string }
-  | { type: "danceOff"; seconds: number }
+  | { type: "danceOff"; seconds: number; ids: string[] }
+  | { type: "danceTick"; on: boolean; left: number }
   | { type: "danceStop" }
   | { type: "thinking"; on: boolean };
 

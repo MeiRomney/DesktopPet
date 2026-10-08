@@ -34,6 +34,9 @@ export default function App() {
   const [text, setText] = useState("");
   const [emote, setEmote] = useState<string | null>(null);
   const emoteTimer = useRef<number>();
+  const tickTimer = useRef<number>();
+  const sendTick = (on: boolean, left: number) =>
+    window.api.bus.send({ type: "danceTick", on, left });
   const dancing = useRef(false);
   const {
     pos,
@@ -58,7 +61,7 @@ export default function App() {
     if (m.type === "spawn") act.spawn(m.emoji, m.name);
     else if (m.type === "lookNow") speech.lookAround(true);
     else if (m.type === "emote") playEmote(m.id);
-    else if (m.type === "danceOff") startDanceOff(m.seconds);
+    else if (m.type === "danceOff") startDanceOff(m.seconds, m.ids);
     else if (m.type === "danceStop") stopDance();
     else if (m.type === "drawZone") {
       core.hovering.current = false;
@@ -82,6 +85,8 @@ export default function App() {
 
   const stopDance = () => {
     window.clearTimeout(emoteTimer.current);
+    window.clearInterval(tickTimer.current);
+    sendTick(false, 0); // the control panel resets its duration display
     dancing.current = false;
     setEmote(null);
     core.setPose("neutral");
@@ -92,27 +97,48 @@ export default function App() {
     const e = EMOTES.find((x) => x.id === id);
     if (!e) return;
     freezePet();
-    core.setPose(e.pose);
-    setEmote(id);
     window.clearTimeout(emoteTimer.current);
-    emoteTimer.current = window.setTimeout(stopDance, e.ms);
+    window.clearInterval(tickTimer.current);
+    sendTick(false, 0);
+    dancing.current = false; // a single move cancels a running dance-off
+    core.setPose(e.pose);
+    setEmote(null); // drop the class first so the same move restarts from frame 0 if clicked again
+    window.setTimeout(() => setEmote(id), 30);
+    emoteTimer.current = window.setTimeout(stopDance, e.ms + 30);
   };
 
-  // Dance-off: chain random moves (never the same one twice in a row) until the time is up.
-  const startDanceOff = (seconds: number) => {
+  // Dance-off: chain random moves from the chosen mix (never the same one twice in a row) until the time is up.
+  const startDanceOff = (seconds: number, ids: string[]) => {
     window.clearTimeout(emoteTimer.current);
+    window.clearInterval(tickTimer.current);
     freezePet();
     dancing.current = true;
+    const picked = EMOTES.filter((e) => ids.includes(e.id));
+    const mix = picked.length ? picked : [...EMOTES];
     const end = Date.now() + seconds * 1000;
-    let last = "";
+    let last = "",
+      shown = seconds;
+    sendTick(true, seconds);
+    tickTimer.current = window.setInterval(() => {
+      const left = Math.max(0, Math.ceil((end - Date.now()) / 1000));
+      if (left !== shown) {
+        shown = left;
+        sendTick(true, left);
+      }
+    }, 200);
     const next = () => {
       if (!dancing.current) return;
       const left = end - Date.now();
-      // only moves that finish a full cycle before the time runs out
-      const pool = EMOTES.filter((e) => e.id !== last && e.ms <= left + 500);
+      // only moves that finish (almost) before the time runs out
+      const pool = mix.filter(
+        (e) => (e.id !== last || mix.length === 1) && e.ms <= left + 300,
+      );
       if (!pool.length) {
-        stopDance();
+        // no move fits in the remaining seconds: strike a pose until the clock hits zero
+        setEmote(null);
+        core.setPose("happy");
         speech.showBubble("Mic drop.", 3000);
+        emoteTimer.current = window.setTimeout(stopDance, Math.max(0, left));
         return;
       }
       const e = pool[Math.floor(Math.random() * pool.length)];

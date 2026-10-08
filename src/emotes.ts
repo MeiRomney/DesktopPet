@@ -6,9 +6,22 @@ export const EMOTES = [
   { id: "shuffle", label: "Shuffle", icon: "🕺", ms: 4000, pose: "happy" },
   { id: "sway", label: "Hip Sway", icon: "😏", ms: 4800, pose: "neutral" },
   { id: "shimmy", label: "Shimmy", icon: "✨", ms: 2400, pose: "neutral" },
-  { id: "bodyroll", label: "Body Roll", icon: "🌊", ms: 4800, pose: "happy" },
+  { id: "bodyroll", label: "Body Roll", icon: "🌊", ms: 4800, pose: "neutral" },
   { id: "strut", label: "Catwalk", icon: "😎", ms: 3200, pose: "neutral" },
-  { id: "dip", label: "The Dip", icon: "🔥", ms: 4800, pose: "happy" },
+  { id: "dip", label: "The Dip", icon: "🔥", ms: 4800, pose: "neutral" },
+  { id: "litefeet", label: "Litefeet", icon: "👟", ms: 3200, pose: "neutral" },
+  {
+    id: "breakdance",
+    label: "Breakdance",
+    icon: "🤸",
+    ms: 3200,
+    pose: "neutral",
+  },
+  { id: "robot", label: "Robot", icon: "🤖", ms: 3200, pose: "neutral" },
+  { id: "krump", label: "Krump", icon: "💢", ms: 3200, pose: "angry" },
+  { id: "dancehall", label: "Dancehall", icon: "🌴", ms: 4800, pose: "happy" },
+  { id: "ballet", label: "Ballet", icon: "🩰", ms: 4800, pose: "neutral" },
+  { id: "locking", label: "Locking", icon: "🔒", ms: 4800, pose: "neutral" },
 ] as const;
 
 export const DANCE_LINES = [
@@ -20,4 +33,7 @@ export const DANCE_LINES = [
   "Yes, I know.",
   "Is it warm in here?",
   "Look at me, not your spreadsheet.",
+  "Five, six, seven, eight!",
+  "Lock it. Lock it!",
+  "Beep boop. Boogie.",
 ];

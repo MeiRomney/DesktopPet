@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ControlPanel } from "./components/ControlPanel";
 import { useAppearance } from "./hooks/useAppearance";
+import { useDanceSettings } from "./hooks/useDanceSettings";
 import { useLookSettings } from "./hooks/useLookSettings";
 import { useQuickToys } from "./hooks/useQuickToys";
 import { useSize } from "./hooks/useSize";
@@ -14,13 +15,16 @@ export default function ControlApp() {
   const { size, changeSize } = useSize();
   const look = useLookSettings();
   const quick = useQuickToys();
+  const dance = useDanceSettings();
   const [thinking, setThinking] = useState(false);
+  const [danceLeft, setDanceLeft] = useState<number | null>(null); // seconds left; null = no dance-off running
 
   useEffect(() => {
     document.title = "Stick: Control panel";
     document.documentElement.classList.add("ctrlWin");
     return window.api.bus.on((m) => {
       if (m.type === "thinking") setThinking(m.on);
+      else if (m.type === "danceTick") setDanceLeft(m.on ? m.left : null);
     });
   }, []);
 
@@ -34,11 +38,17 @@ export default function ControlApp() {
       }}
       zone={zone}
       size={size}
+      dance={dance}
+      danceLeft={danceLeft}
       onEmote={(id) => window.api.bus.send({ type: "emote", id })}
-      onDanceOff={(seconds) =>
-        window.api.bus.send({ type: "danceOff", seconds })
-      }
-      onDanceStop={() => window.api.bus.send({ type: "danceStop" })}
+      onDanceOff={(seconds, ids) => {
+        setDanceLeft(seconds);
+        window.api.bus.send({ type: "danceOff", seconds, ids });
+      }}
+      onDanceStop={() => {
+        setDanceLeft(null);
+        window.api.bus.send({ type: "danceStop" });
+      }}
       onSize={changeSize}
       quick={quick}
       onSpawn={(emoji, name) =>

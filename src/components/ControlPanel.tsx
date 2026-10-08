@@ -10,8 +10,11 @@ import type { useQuickToys } from "../hooks/useQuickToys";
 import type { useZone } from "../hooks/useZone";
 import { Stickman } from "./Stickman";
 import { EMOTES } from "../emotes";
+import { useDanceSettings } from "../hooks/useDanceSettings";
+import type { DanceMode } from "../hooks/useDanceSettings";
 
 type Zone = ReturnType<typeof useZone>;
+type Dance = ReturnType<typeof useDanceSettings>;
 export type CameraApi = {
   look: boolean;
   toggleLook(): void;
@@ -27,7 +30,9 @@ type Props = {
   zone: Zone;
   size: number;
   onEmote(id: string): void;
-  onDanceOff(seconds: number): void;
+  dance: Dance;
+  danceLeft: number | null;
+  onDanceOff(seconds: number, ids: string[]): void;
   onDanceStop(): void;
   onSize(v: number): void;
   quick: ReturnType<typeof useQuickToys>;
@@ -320,41 +325,118 @@ function CameraTab({ s }: { s: CameraApi }) {
   );
 }
 
+const DANCE_MODES: [DanceMode, string][] = [
+  ["all", "All moves"],
+  ["custom", "My mix"],
+];
+const fmtTime = (v: number) =>
+  `${Math.floor(v / 60)}:${String(v % 60).padStart(2, "0")}`;
+
 function EmotesTab({
+  dance,
+  left,
   onEmote,
   onDanceOff,
   onDanceStop,
 }: {
+  dance: Dance;
+  left: number | null;
   onEmote(id: string): void;
-  onDanceOff(s: number): void;
+  onDanceOff(s: number, ids: string[]): void;
   onDanceStop(): void;
 }) {
-  const [secs, setSecs] = useState(60);
-  const fmt = (v: number) =>
-    `${Math.floor(v / 60)}:${String(v % 60).padStart(2, "0")}`;
+  const running = left !== null;
+  const picked = dance.ids.length;
+  const canStart = !running && picked >= 2;
   return (
     <>
       <Section
         title="Dance-off"
-        hint="The pet chains random moves from the list below for as long as you choose."
+        hint="The pet chains random moves for as long as you choose, never the same move twice in a row."
       >
-        <Slider
-          label="Duration"
-          min={10}
-          max={300}
-          step={10}
-          value={secs}
-          onChange={setSecs}
-          show={fmt}
-        />
+        {left !== null ? (
+          <div className="cpSlider">
+            <span>Time left</span>
+            <div className="cpBar">
+              <i
+                style={{
+                  width: `${Math.min(100, (left / dance.secs) * 100)}%`,
+                }}
+              />
+            </div>
+            <output>{fmtTime(left)}</output>
+          </div>
+        ) : (
+          <Slider
+            label="Duration"
+            min={10}
+            max={300}
+            step={10}
+            value={dance.secs}
+            onChange={dance.setSecs}
+            show={fmtTime}
+          />
+        )}
         <div className="zoneRow">
-          <button className="pill on" onClick={() => onDanceOff(secs)}>
+          <button
+            className="pill on"
+            disabled={!canStart}
+            onClick={() => onDanceOff(dance.secs, dance.ids)}
+          >
             🔥 Start dance-off
           </button>
           <button className="pill" onClick={onDanceStop}>
             ■ Stop
           </button>
         </div>
+        {!running && picked < 2 && (
+          <p className="cpHint">Pick at least 2 moves for the mix.</p>
+        )}
+      </Section>
+      <Section
+        title="Moves in the dance-off"
+        hint="Use every move, or build your own mix."
+      >
+        <Choice
+          value={dance.mode}
+          options={DANCE_MODES}
+          onChange={dance.setMode}
+        />
+        {dance.mode === "custom" && (
+          <>
+            <div
+              className="cpToys"
+              style={{ gridTemplateColumns: "repeat(3, 1fr)" }}
+            >
+              {EMOTES.map((e) => (
+                <button
+                  key={e.id}
+                  className={`pill${dance.mix.includes(e.id) ? " on" : ""}`}
+                  aria-pressed={dance.mix.includes(e.id)}
+                  disabled={running}
+                  onClick={() => dance.toggle(e.id)}
+                >
+                  {e.icon} {e.label}
+                </button>
+              ))}
+            </div>
+            <div className="zoneRow">
+              <button
+                className="pill"
+                disabled={running}
+                onClick={dance.selectAll}
+              >
+                Select all
+              </button>
+              <button className="pill" disabled={running} onClick={dance.clear}>
+                Clear
+              </button>
+              <span className="cpHint">
+                {dance.mix.length} of {EMOTES.length} selected
+              </span>
+            </div>
+          </>
+        )}
       </Section>
       <Section
         title="Single moves"
@@ -590,6 +672,8 @@ const TABS: (Tab | "divider")[] = [
     label: "Emotes",
     render: (p) => (
       <EmotesTab
+        dance={p.dance}
+        left={p.danceLeft}
         onEmote={p.onEmote}
         onDanceOff={p.onDanceOff}
         onDanceStop={p.onDanceStop}

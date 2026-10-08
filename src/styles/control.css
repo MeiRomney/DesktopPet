@@ -262,6 +262,19 @@
   outline: 2px solid var(--lilac);
   outline-offset: 2px;
 }
+.cpBar {
+  height: 12px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  overflow: hidden;
+}
+.cpBar i {
+  display: block;
+  height: 100%;
+  background: var(--lilac);
+  transition: width 0.9s linear;
+}
 
 /* Pet menu (the small card when you click the pet) */
 .toys.three {

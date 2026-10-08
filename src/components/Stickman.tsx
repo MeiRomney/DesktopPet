@@ -54,8 +54,12 @@ export function Stickman({
     [63, "legR"],
   ] as const;
   // Among Us style legs: plain stubby legs, straight sides, flat rounded-off bottoms, no separate foot.
+  // const stump = (x: number) =>
+  //   `M${x - 10.5} 124 H${x + 10.5} V164 Q${x + 10.5} 172 ${x + 2.5} 172 H${x - 2.5} Q${x - 10.5} 172 ${x - 10.5} 164 Z`;
+  // Among Us style legs: plain stubby legs, straight sides, flat rounded-off bottoms, no separate foot.
+  // The top is narrower and tucked up inside the body, so it never shows as a square corner when the body moves.
   const stump = (x: number) =>
-    `M${x - 10.5} 124 H${x + 10.5} V164 Q${x + 10.5} 172 ${x + 2.5} 172 H${x - 2.5} Q${x - 10.5} 172 ${x - 10.5} 164 Z`;
+    `M${x - 6} 112 H${x + 6} C${x + 6} 122 ${x + 10.5} 122 ${x + 10.5} 132 V164 Q${x + 10.5} 172 ${x + 2.5} 172 H${x - 2.5} Q${x - 10.5} 172 ${x - 10.5} 164 V132 C${x - 10.5} 122 ${x - 6} 122 ${x - 6} 112 Z`;
 
   // Body and arms are drawn in two passes (ink, then color) so they read as one silhouette.
   const bodyAndArms = (ink: boolean) => (
@@ -80,6 +84,7 @@ export function Stickman({
   const eye = (cx: number, id: string) => (
     <g key={id}>
       <ellipse
+        className="shadow"
         cx={cx}
         cy="48"
         rx={rx}
@@ -117,6 +122,7 @@ export function Stickman({
       strokeLinejoin="round"
     >
       <ellipse
+        className="shadow"
         cx="50"
         cy="175"
         rx="20"
@@ -124,7 +130,7 @@ export function Stickman({
         fill="rgba(0,0,0,.18)"
         stroke="none"
       />
-      {bodyAndArms(true)}
+      <g className="upper">{bodyAndArms(true)}</g>
       {/* Each leg keeps its own outline, so when one passes over the other the line shows between them. */}
       {legs.map(([x, cls]) => (
         <g key={cls} className={`legGap ${cls === "legL" ? "gapL" : "gapR"}`}>
@@ -134,22 +140,26 @@ export function Stickman({
           </g>
         </g>
       ))}
-      {bodyAndArms(false)}
-      <circle cx="50" cy="45" r="40" fill={color} />
-      <g className="face">
-        {eye(39, "eyeL")}
-        {eye(61, "eyeR")}
-        {pose === "angry" && (
-          <path strokeWidth="4" d="M28 31 l18 6 M72 31 l-18 6" />
-        )}
-        {pose === "sad" && (
-          <path strokeWidth="4" d="M28 37 l18 -6 M72 37 l-18 -6" />
-        )}
-        <path
-          strokeWidth="3.5"
-          d={mouths[pose]}
-          fill={pose === "shocked" ? INK : "none"}
-        />
+      <g className="upper">
+        {bodyAndArms(false)}
+        <g className="head">
+          <circle cx="50" cy="45" r="40" fill={color} />
+          <g className="face">
+            {eye(39, "eyeL")}
+            {eye(61, "eyeR")}
+            {pose === "angry" && (
+              <path strokeWidth="4" d="M28 31 l18 6 M72 31 l-18 6" />
+            )}
+            {pose === "sad" && (
+              <path strokeWidth="4" d="M28 37 l18 -6 M72 37 l-18 -6" />
+            )}
+            <path
+              strokeWidth="3.5"
+              d={mouths[pose]}
+              fill={pose === "shocked" ? INK : "none"}
+            />
+          </g>
+        </g>
       </g>
     </svg>
   );
