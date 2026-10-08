@@ -27,6 +27,8 @@ type Props = {
   zone: Zone;
   size: number;
   onEmote(id: string): void;
+  onDanceOff(seconds: number): void;
+  onDanceStop(): void;
   onSize(v: number): void;
   quick: ReturnType<typeof useQuickToys>;
   onSpawn(emoji: string, name: string): void;
@@ -318,20 +320,58 @@ function CameraTab({ s }: { s: CameraApi }) {
   );
 }
 
-function EmotesTab({ onEmote }: { onEmote(id: string): void }) {
+function EmotesTab({
+  onEmote,
+  onDanceOff,
+  onDanceStop,
+}: {
+  onEmote(id: string): void;
+  onDanceOff(s: number): void;
+  onDanceStop(): void;
+}) {
+  const [secs, setSecs] = useState(60);
+  const fmt = (v: number) =>
+    `${Math.floor(v / 60)}:${String(v % 60).padStart(2, "0")}`;
   return (
-    <Section
-      title="Emotes"
-      hint="Click one and the pet dances for a few seconds."
-    >
-      <div className="cpToys" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
-        {EMOTES.map((e) => (
-          <button key={e.id} className="pill" onClick={() => onEmote(e.id)}>
-            {e.icon} {e.label}
+    <>
+      <Section
+        title="Dance-off"
+        hint="The pet chains random moves from the list below for as long as you choose."
+      >
+        <Slider
+          label="Duration"
+          min={10}
+          max={300}
+          step={10}
+          value={secs}
+          onChange={setSecs}
+          show={fmt}
+        />
+        <div className="zoneRow">
+          <button className="pill on" onClick={() => onDanceOff(secs)}>
+            🔥 Start dance-off
           </button>
-        ))}
-      </div>
-    </Section>
+          <button className="pill" onClick={onDanceStop}>
+            ■ Stop
+          </button>
+        </div>
+      </Section>
+      <Section
+        title="Single moves"
+        hint="Click one and the pet dances for a few seconds."
+      >
+        <div
+          className="cpToys"
+          style={{ gridTemplateColumns: "repeat(3, 1fr)" }}
+        >
+          {EMOTES.map((e) => (
+            <button key={e.id} className="pill" onClick={() => onEmote(e.id)}>
+              {e.icon} {e.label}
+            </button>
+          ))}
+        </div>
+      </Section>
+    </>
   );
 }
 
@@ -548,7 +588,13 @@ const TABS: (Tab | "divider")[] = [
     id: "emotes",
     icon: "💃",
     label: "Emotes",
-    render: (p) => <EmotesTab onEmote={p.onEmote} />,
+    render: (p) => (
+      <EmotesTab
+        onEmote={p.onEmote}
+        onDanceOff={p.onDanceOff}
+        onDanceStop={p.onDanceStop}
+      />
+    ),
   },
   "divider",
   {

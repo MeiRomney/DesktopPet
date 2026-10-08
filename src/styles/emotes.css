@@ -214,3 +214,188 @@
     transform: rotate(-8deg);
   }
 }
+
+/* Hip Sway: slow, exaggerated. The head tilts the opposite way so the hips lead. */
+.pet.emote-sway svg {
+  animation: eSway 1.2s infinite alternate ease-in-out;
+  transform-origin: 50% 100%;
+}
+@keyframes eSway {
+  from {
+    transform: rotate(-7deg) translateX(-6px);
+  }
+  to {
+    transform: rotate(7deg) translateX(6px);
+  }
+}
+.pet.emote-sway .face {
+  transform-origin: 50px 52px;
+  animation: eSwayFace 1.2s infinite alternate ease-in-out;
+}
+@keyframes eSwayFace {
+  from {
+    transform: rotate(5deg);
+  }
+  to {
+    transform: rotate(-5deg);
+  }
+}
+.pet.emote-sway .legL {
+  transform-origin: 37px 126px;
+  animation: eSlideL 1.2s infinite alternate ease-in-out;
+}
+.pet.emote-sway .legR {
+  transform-origin: 63px 126px;
+  animation: eSlideR 1.2s infinite alternate ease-in-out;
+}
+
+/* Shimmy: fast shoulder shake */
+.pet.emote-shimmy svg {
+  animation: eShimmy 0.12s infinite alternate linear;
+  transform-origin: 50% 100%;
+}
+@keyframes eShimmy {
+  from {
+    transform: rotate(-3deg) translateX(-2px);
+  }
+  to {
+    transform: rotate(3deg) translateX(2px);
+  }
+}
+.pet.emote-shimmy .armL {
+  transform-origin: 33px 88px;
+  animation: eShimL 0.12s infinite alternate linear;
+}
+.pet.emote-shimmy .armR {
+  transform-origin: 67px 88px;
+  animation: eShimR 0.12s infinite alternate linear;
+}
+@keyframes eShimL {
+  from {
+    transform: rotate(-14deg);
+  }
+  to {
+    transform: rotate(14deg);
+  }
+}
+@keyframes eShimR {
+  from {
+    transform: rotate(14deg);
+  }
+  to {
+    transform: rotate(-14deg);
+  }
+}
+
+/* Body Roll: a squash-and-skew wave up the body */
+.pet.emote-bodyroll svg {
+  animation: eRoll 1.6s infinite ease-in-out;
+  transform-origin: 50% 100%;
+}
+@keyframes eRoll {
+  0%,
+  100% {
+    transform: skewX(0) scale(1, 1) translateY(0);
+  }
+  20% {
+    transform: skewX(-7deg) scale(1.05, 0.96) translateY(0);
+  }
+  40% {
+    transform: skewX(0) scale(0.96, 1.04) translateY(-4px);
+  }
+  60% {
+    transform: skewX(7deg) scale(1.05, 0.96) translateY(0);
+  }
+  80% {
+    transform: skewX(0) scale(0.96, 1.04) translateY(-4px);
+  }
+}
+
+/* Catwalk: strut in place, big alternating steps, swinging arms */
+.pet.emote-strut svg {
+  animation: eStrut 0.8s infinite linear;
+  transform-origin: 50% 100%;
+}
+@keyframes eStrut {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  25% {
+    transform: translateY(-3px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(0) rotate(3deg);
+  }
+  75% {
+    transform: translateY(-3px) rotate(0deg);
+  }
+}
+.pet.emote-strut .legL {
+  animation: stepL 0.8s linear infinite;
+}
+.pet.emote-strut .legR {
+  animation: stepR 0.8s linear infinite;
+}
+.pet.emote-strut .armL {
+  transform-origin: 33px 88px;
+  animation: eStrutArmL 0.8s infinite ease-in-out;
+}
+.pet.emote-strut .armR {
+  transform-origin: 67px 88px;
+  animation: eStrutArmR 0.8s infinite ease-in-out;
+}
+@keyframes eStrutArmL {
+  0%,
+  100% {
+    transform: rotate(14deg);
+  }
+  50% {
+    transform: rotate(-14deg);
+  }
+}
+@keyframes eStrutArmR {
+  0%,
+  100% {
+    transform: rotate(-14deg);
+  }
+  50% {
+    transform: rotate(14deg);
+  }
+}
+
+/* The Dip: lean back and drop low, hold, then pop back up */
+.pet.emote-dip svg {
+  animation: eDip 2.4s infinite ease-in-out;
+  transform-origin: 50% 100%;
+}
+@keyframes eDip {
+  0%,
+  100% {
+    transform: translateY(0) scale(1, 1) rotate(0deg);
+  }
+  30%,
+  55% {
+    transform: translateY(10px) scale(1.06, 0.9) rotate(-6deg);
+  }
+  78% {
+    transform: translateY(-8px) scale(0.96, 1.05) rotate(3deg);
+  }
+}
+.pet.emote-dip .face {
+  transform-origin: 50px 52px;
+  animation: eDipFace 2.4s infinite ease-in-out;
+}
+@keyframes eDipFace {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  30%,
+  55% {
+    transform: rotate(8deg);
+  }
+  78% {
+    transform: rotate(-4deg);
+  }
+}

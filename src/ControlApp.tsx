@@ -35,6 +35,10 @@ export default function ControlApp() {
       zone={zone}
       size={size}
       onEmote={(id) => window.api.bus.send({ type: "emote", id })}
+      onDanceOff={(seconds) =>
+        window.api.bus.send({ type: "danceOff", seconds })
+      }
+      onDanceStop={() => window.api.bus.send({ type: "danceStop" })}
       onSize={changeSize}
       quick={quick}
       onSpawn={(emoji, name) =>

@@ -16,7 +16,7 @@ import { useSpeech } from "./hooks/useSpeech";
 import { useZone } from "./hooks/useZone";
 import type { BusMsg } from "./types";
 import { clamp } from "./utils";
-import { EMOTES } from "./emotes";
+import { EMOTES, DANCE_LINES } from "./emotes";
 
 const PANEL_W = 236; // width of the small pet menu
 
@@ -34,6 +34,7 @@ export default function App() {
   const [text, setText] = useState("");
   const [emote, setEmote] = useState<string | null>(null);
   const emoteTimer = useRef<number>();
+  const dancing = useRef(false);
   const {
     pos,
     pose,
@@ -57,6 +58,8 @@ export default function App() {
     if (m.type === "spawn") act.spawn(m.emoji, m.name);
     else if (m.type === "lookNow") speech.lookAround(true);
     else if (m.type === "emote") playEmote(m.id);
+    else if (m.type === "danceOff") startDanceOff(m.seconds);
+    else if (m.type === "danceStop") stopDance();
     else if (m.type === "drawZone") {
       core.hovering.current = false;
       setOpen(false);
@@ -65,11 +68,9 @@ export default function App() {
   };
   useEffect(() => window.api.bus.on((m) => onCmd.current(m)), []);
 
-  const playEmote = (id: string) => {
-    const e = EMOTES.find((x) => x.id === id);
-    if (!e) return;
-    const r = core.wrapRef.current!.getBoundingClientRect();
+  const freezePet = () => {
     // stop any walk right where the pet visually is
+    const r = core.wrapRef.current!.getBoundingClientRect();
     core.walkId.current++;
     core.rail.current = null;
     core.setMoveMs(0);
@@ -77,14 +78,56 @@ export default function App() {
     core.setPos({ x: r.left, y: r.top });
     core.busy.current = true; // pauses wandering and spontaneous speech
     core.setOpen(false);
-    core.setPose("happy");
+  };
+
+  const stopDance = () => {
+    window.clearTimeout(emoteTimer.current);
+    dancing.current = false;
+    setEmote(null);
+    core.setPose("neutral");
+    core.busy.current = false;
+  };
+
+  const playEmote = (id: string) => {
+    const e = EMOTES.find((x) => x.id === id);
+    if (!e) return;
+    freezePet();
+    core.setPose(e.pose);
     setEmote(id);
     window.clearTimeout(emoteTimer.current);
-    emoteTimer.current = window.setTimeout(() => {
-      setEmote(null);
-      core.setPose("neutral");
-      core.busy.current = false;
-    }, e.ms);
+    emoteTimer.current = window.setTimeout(stopDance, e.ms);
+  };
+
+  // Dance-off: chain random moves (never the same one twice in a row) until the time is up.
+  const startDanceOff = (seconds: number) => {
+    window.clearTimeout(emoteTimer.current);
+    freezePet();
+    dancing.current = true;
+    const end = Date.now() + seconds * 1000;
+    let last = "";
+    const next = () => {
+      if (!dancing.current) return;
+      const left = end - Date.now();
+      // only moves that finish a full cycle before the time runs out
+      const pool = EMOTES.filter((e) => e.id !== last && e.ms <= left + 500);
+      if (!pool.length) {
+        stopDance();
+        speech.showBubble("Mic drop.", 3000);
+        return;
+      }
+      const e = pool[Math.floor(Math.random() * pool.length)];
+      last = e.id;
+      core.setPose(e.pose);
+      setEmote(e.id);
+      if (Math.random() < 0.5)
+        speech.showBubble(
+          DANCE_LINES[Math.floor(Math.random() * DANCE_LINES.length)],
+          2500,
+        );
+      emoteTimer.current = window.setTimeout(next, e.ms);
+    };
+    speech.showBubble("Dance-off time. Try to keep up.", 2500);
+    next();
   };
 
   // Tell the control panel when the pet is busy, and when you finished (or cancelled) drawing a box.

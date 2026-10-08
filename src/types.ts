@@ -32,6 +32,8 @@ export type BusMsg =
   | { type: "zoneDone" }
   | { type: "lookNow" }
   | { type: "emote"; id: string }
+  | { type: "danceOff"; seconds: number }
+  | { type: "danceStop" }
   | { type: "thinking"; on: boolean };
 
 declare global {
