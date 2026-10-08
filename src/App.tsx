@@ -16,6 +16,7 @@ import { useSpeech } from "./hooks/useSpeech";
 import { useZone } from "./hooks/useZone";
 import type { BusMsg } from "./types";
 import { clamp } from "./utils";
+import { EMOTES } from "./emotes";
 
 const PANEL_W = 236; // width of the small pet menu
 
@@ -31,6 +32,8 @@ export default function App() {
   const quick = useQuickToys();
 
   const [text, setText] = useState("");
+  const [emote, setEmote] = useState<string | null>(null);
+  const emoteTimer = useRef<number>();
   const {
     pos,
     pose,
@@ -53,6 +56,7 @@ export default function App() {
   onCmd.current = (m) => {
     if (m.type === "spawn") act.spawn(m.emoji, m.name);
     else if (m.type === "lookNow") speech.lookAround(true);
+    else if (m.type === "emote") playEmote(m.id);
     else if (m.type === "drawZone") {
       core.hovering.current = false;
       setOpen(false);
@@ -60,6 +64,28 @@ export default function App() {
     }
   };
   useEffect(() => window.api.bus.on((m) => onCmd.current(m)), []);
+
+  const playEmote = (id: string) => {
+    const e = EMOTES.find((x) => x.id === id);
+    if (!e) return;
+    const r = core.wrapRef.current!.getBoundingClientRect();
+    // stop any walk right where the pet visually is
+    core.walkId.current++;
+    core.rail.current = null;
+    core.setMoveMs(0);
+    core.setStride(false);
+    core.setPos({ x: r.left, y: r.top });
+    core.busy.current = true; // pauses wandering and spontaneous speech
+    core.setOpen(false);
+    core.setPose("happy");
+    setEmote(id);
+    window.clearTimeout(emoteTimer.current);
+    emoteTimer.current = window.setTimeout(() => {
+      setEmote(null);
+      core.setPose("neutral");
+      core.busy.current = false;
+    }, e.ms);
+  };
 
   // Tell the control panel when the pet is busy, and when you finished (or cancelled) drawing a box.
   useEffect(() => {
@@ -153,7 +179,7 @@ export default function App() {
           side={pos.x > 230 ? "left" : "right"}
         />
         <div
-          className={`pet ${pose}${stride ? " walking" : ""}`}
+          className={`pet ${pose}${stride ? " walking" : ""}${emote ? ` emote emote-${emote}` : ""}`}
           onMouseDown={act.down}
           onAnimationIteration={(e) => {
             if (e.animationName.startsWith("step") && S.current.moveMs === 0)

@@ -136,19 +136,21 @@ export function Stickman({
       ))}
       {bodyAndArms(false)}
       <circle cx="50" cy="45" r="40" fill={color} />
-      {eye(39, "eyeL")}
-      {eye(61, "eyeR")}
-      {pose === "angry" && (
-        <path strokeWidth="4" d="M28 31 l18 6 M72 31 l-18 6" />
-      )}
-      {pose === "sad" && (
-        <path strokeWidth="4" d="M28 37 l18 -6 M72 37 l-18 -6" />
-      )}
-      <path
-        strokeWidth="3.5"
-        d={mouths[pose]}
-        fill={pose === "shocked" ? INK : "none"}
-      />
+      <g className="face">
+        {eye(39, "eyeL")}
+        {eye(61, "eyeR")}
+        {pose === "angry" && (
+          <path strokeWidth="4" d="M28 31 l18 6 M72 31 l-18 6" />
+        )}
+        {pose === "sad" && (
+          <path strokeWidth="4" d="M28 37 l18 -6 M72 37 l-18 -6" />
+        )}
+        <path
+          strokeWidth="3.5"
+          d={mouths[pose]}
+          fill={pose === "shocked" ? INK : "none"}
+        />
+      </g>
     </svg>
   );
 }

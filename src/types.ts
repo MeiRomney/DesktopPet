@@ -31,6 +31,7 @@ export type BusMsg =
   | { type: "drawZone" }
   | { type: "zoneDone" }
   | { type: "lookNow" }
+  | { type: "emote"; id: string }
   | { type: "thinking"; on: boolean };
 
 declare global {

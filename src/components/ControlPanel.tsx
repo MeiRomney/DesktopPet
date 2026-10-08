@@ -9,6 +9,7 @@ import type { LookEvery } from "../hooks/useLookSettings";
 import type { useQuickToys } from "../hooks/useQuickToys";
 import type { useZone } from "../hooks/useZone";
 import { Stickman } from "./Stickman";
+import { EMOTES } from "../emotes";
 
 type Zone = ReturnType<typeof useZone>;
 export type CameraApi = {
@@ -25,6 +26,7 @@ type Props = {
   camera: CameraApi;
   zone: Zone;
   size: number;
+  onEmote(id: string): void;
   onSize(v: number): void;
   quick: ReturnType<typeof useQuickToys>;
   onSpawn(emoji: string, name: string): void;
@@ -304,7 +306,7 @@ function CameraTab({ s }: { s: CameraApi }) {
         <button
           className="pill"
           disabled={s.thinking}
-          onClick={() => s.lookNow}
+          onClick={() => s.lookNow()}
         >
           {s.thinking ? "Looking..." : "📸 Look now"}
         </button>
@@ -313,6 +315,23 @@ function CameraTab({ s }: { s: CameraApi }) {
         </p>
       </Section>
     </>
+  );
+}
+
+function EmotesTab({ onEmote }: { onEmote(id: string): void }) {
+  return (
+    <Section
+      title="Emotes"
+      hint="Click one and the pet dances for a few seconds."
+    >
+      <div className="cpToys" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+        {EMOTES.map((e) => (
+          <button key={e.id} className="pill" onClick={() => onEmote(e.id)}>
+            {e.icon} {e.label}
+          </button>
+        ))}
+      </div>
+    </Section>
   );
 }
 
@@ -524,6 +543,12 @@ const TABS: (Tab | "divider")[] = [
     icon: "🧸",
     label: "Toys",
     render: (p) => <ToysTab onSpawn={p.onSpawn} quick={p.quick} />,
+  },
+  {
+    id: "emotes",
+    icon: "💃",
+    label: "Emotes",
+    render: (p) => <EmotesTab onEmote={p.onEmote} />,
   },
   "divider",
   {

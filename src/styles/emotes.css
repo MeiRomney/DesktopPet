@@ -1,0 +1,216 @@
+/* Emotes: the pose is "happy" (arms up) while these play */
+.pet.emote svg {
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+/* Bounce: hop with a little squash */
+.pet.emote-bounce svg {
+  animation: eBounce 0.5s infinite;
+}
+@keyframes eBounce {
+  0%,
+  100% {
+    transform: translateY(0) scale(1.06, 0.94);
+  }
+  50% {
+    transform: translateY(-18px) scale(0.96, 1.05);
+  }
+}
+
+/* Spin: a jump-turn. Body narrows to a side view and back, the face rotates around the head. */
+.pet.emote-spin svg {
+  animation: eSpin 1.2s linear infinite;
+  transform-origin: 50% 100%;
+}
+@keyframes eSpin {
+  0% {
+    transform: translateY(0) scaleX(1);
+  }
+  12.5% {
+    transform: translateY(-5px) scaleX(0.74);
+  }
+  25% {
+    transform: translateY(-10px) scaleX(0.44);
+  }
+  37.5% {
+    transform: translateY(-13px) scaleX(0.74);
+  }
+  50% {
+    transform: translateY(-14px) scaleX(1);
+  }
+  62.5% {
+    transform: translateY(-13px) scaleX(0.74);
+  }
+  75% {
+    transform: translateY(-10px) scaleX(0.44);
+  }
+  87.5% {
+    transform: translateY(-5px) scaleX(0.74);
+  }
+  100% {
+    transform: translateY(0) scaleX(1);
+  }
+}
+
+/* The face slides to the edge of the head, squeezes, and hides for the back half of the turn */
+.pet.emote-spin .face {
+  transform-origin: 50px 52px;
+  animation: eFace 1.2s linear infinite;
+}
+@keyframes eFace {
+  0% {
+    transform: translateX(0) scaleX(1);
+    opacity: 1;
+  }
+  12.5% {
+    transform: translateX(21px) scaleX(0.7);
+    opacity: 1;
+  }
+  22% {
+    transform: translateX(29px) scaleX(0.25);
+    opacity: 1;
+  }
+  25% {
+    transform: translateX(30px) scaleX(0.05);
+    opacity: 0;
+  }
+  75% {
+    transform: translateX(-30px) scaleX(0.05);
+    opacity: 0;
+  }
+  78% {
+    transform: translateX(-29px) scaleX(0.25);
+    opacity: 1;
+  }
+  87.5% {
+    transform: translateX(-21px) scaleX(0.7);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0) scaleX(1);
+    opacity: 1;
+  }
+}
+
+/* Arms flare out like a twirl */
+.pet.emote-spin .armL {
+  transform-origin: 33px 88px;
+  transform: rotate(-12deg);
+}
+.pet.emote-spin .armR {
+  transform-origin: 67px 88px;
+  transform: rotate(12deg);
+}
+
+/* Wiggle: hip sway with alternating legs */
+.pet.emote-wiggle svg {
+  animation: eWiggle 0.4s infinite alternate;
+}
+@keyframes eWiggle {
+  from {
+    transform: rotate(-9deg) translateX(-3px);
+  }
+  to {
+    transform: rotate(9deg) translateX(3px);
+  }
+}
+.pet.emote-wiggle .legL {
+  animation: eLegL 0.4s infinite alternate ease-in-out;
+}
+.pet.emote-wiggle .legR {
+  animation: eLegR 0.4s infinite alternate ease-in-out;
+}
+@keyframes eLegL {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-4px);
+  }
+}
+@keyframes eLegR {
+  from {
+    transform: translateY(-4px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Pump: arms alternate up and down, body bobs */
+.pet.emote-pump svg {
+  animation: eBob 0.3s infinite alternate;
+}
+@keyframes eBob {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-5px);
+  }
+}
+.pet.emote-pump .armL {
+  transform-origin: 33px 88px;
+  animation: ePumpL 0.6s infinite ease-in-out;
+}
+.pet.emote-pump .armR {
+  transform-origin: 67px 88px;
+  animation: ePumpR 0.6s infinite ease-in-out;
+}
+@keyframes ePumpL {
+  0%,
+  100% {
+    transform: rotate(25deg);
+  }
+  50% {
+    transform: rotate(-25deg);
+  }
+}
+@keyframes ePumpR {
+  0%,
+  100% {
+    transform: rotate(25deg);
+  }
+  50% {
+    transform: rotate(-25deg);
+  }
+}
+
+/* Shuffle: lean side to side while the feet slide in and out */
+.pet.emote-shuffle svg {
+  animation: eShuffle 0.8s infinite;
+}
+@keyframes eShuffle {
+  0%,
+  100% {
+    transform: rotate(-6deg) translateX(-5px);
+  }
+  50% {
+    transform: rotate(6deg) translateX(5px);
+  }
+}
+.pet.emote-shuffle .legL {
+  transform-origin: 37px 126px;
+  animation: eSlideL 0.4s infinite alternate ease-in-out;
+}
+.pet.emote-shuffle .legR {
+  transform-origin: 63px 126px;
+  animation: eSlideR 0.4s infinite alternate ease-in-out;
+}
+@keyframes eSlideL {
+  from {
+    transform: rotate(-5deg);
+  }
+  to {
+    transform: rotate(8deg);
+  }
+}
+@keyframes eSlideR {
+  from {
+    transform: rotate(5deg);
+  }
+  to {
+    transform: rotate(-8deg);
+  }
+}
