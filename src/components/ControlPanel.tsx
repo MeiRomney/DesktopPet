@@ -12,6 +12,18 @@ import { Stickman } from "./Stickman";
 import { EMOTES } from "../emotes";
 import { useDanceSettings } from "../hooks/useDanceSettings";
 import type { DanceMode } from "../hooks/useDanceSettings";
+import {
+  CHARACTERS,
+  CLOTH_COLORS,
+  DEFAULT_LOOK,
+  HAIRS,
+  HAIR_COLORS,
+  HATS,
+  PANTS,
+  SHIRTS,
+  SKINS,
+} from "../characters";
+import { DEFAULT_EYES } from "../hooks/useAppearance";
 
 type Zone = ReturnType<typeof useZone>;
 type Dance = ReturnType<typeof useDanceSettings>;
@@ -23,6 +35,11 @@ export type CameraApi = {
   thinking: boolean;
   lookNow(): void;
 };
+export type SystemApi = {
+  petVisible: boolean;
+  togglePet(): void;
+  minimizePanel(): void;
+};
 
 type Props = {
   appearance: Appearance;
@@ -31,6 +48,7 @@ type Props = {
   size: number;
   onEmote(id: string): void;
   dance: Dance;
+  system: SystemApi;
   danceLeft: number | null;
   onDanceOff(seconds: number, ids: string[]): void;
   onDanceStop(): void;
@@ -145,14 +163,16 @@ function Choice<T extends string | number>({
 function ColorPicker({
   value,
   onChange,
+  colors = COLORS,
 }: {
   value: string;
   onChange(c: string): void;
+  colors?: string[];
 }) {
-  const custom = !COLORS.includes(value);
+  const custom = !colors.includes(value);
   return (
     <div className="cpSwatches">
-      {COLORS.map((c) => (
+      {colors.map((c) => (
         <button
           key={c}
           className={`swatch${c === value ? " sel" : ""}`}
@@ -192,6 +212,7 @@ function Preview({ a }: { a: Appearance }) {
         pose={POSES[i]}
         color={a.color}
         eyes={{ ...a.eyes, track: false }}
+        look={a.look}
         w={54}
         h={96}
         uid="preview"
@@ -206,10 +227,14 @@ function ColorsTab({ a }: { a: Appearance }) {
     <>
       <Preview a={a} />
       <Section
-        title="Body color"
+        title="Body color / skin tone"
         hint="Pick a preset or choose any color you like."
       >
-        <ColorPicker value={a.color} onChange={a.setColor} />
+        <ColorPicker
+          value={a.color}
+          onChange={a.setColor}
+          colors={[...COLORS, ...SKINS]}
+        />
       </Section>
     </>
   );
@@ -614,6 +639,177 @@ function ToysTab({
   );
 }
 
+function Options<T extends string>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T;
+  options: readonly (readonly [T, string])[];
+  onChange(v: T): void;
+}) {
+  return (
+    <div className="zoneRow">
+      {options.map(([v, l]) => (
+        <button
+          key={v}
+          className={`pill${v === value ? " on" : ""}`}
+          aria-pressed={v === value}
+          onClick={() => onChange(v)}
+        >
+          {l}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function CharactersTab({ a }: { a: Appearance }) {
+  return (
+    <>
+      <Section
+        title="Characters"
+        hint="Same chibi body, different people. Picking one loads its skin, hair, eyes and outfit. You can still change each one afterwards."
+      >
+        <div className="cpChars">
+          {CHARACTERS.map((c) => (
+            <button
+              key={c.id}
+              className={`cpChar${a.character === c.id ? " on" : ""}`}
+              aria-pressed={a.character === c.id}
+              onClick={() => a.applyCharacter(c.id)}
+            >
+              <Stickman
+                pose="neutral"
+                color={c.color}
+                eyes={{ ...DEFAULT_EYES, ...c.eyes, track: false }}
+                look={{ ...DEFAULT_LOOK, ...c.look }}
+                w={36}
+                h={64}
+                uid={`char-${c.id}`}
+              />
+              <span>{c.name}</span>
+            </button>
+          ))}
+        </div>
+      </Section>
+      <Section title="Hair">
+        <Options
+          value={a.look.hair}
+          options={HAIRS}
+          onChange={(v) => a.setLook({ hair: v })}
+        />
+        <ColorPicker
+          colors={HAIR_COLORS}
+          value={a.look.hairColor}
+          onChange={(c) => a.setLook({ hairColor: c })}
+        />
+      </Section>
+      <Section title="Face">
+        <Toggle
+          on={a.look.anime}
+          onChange={() => a.setLook({ anime: !a.look.anime })}
+          label="Anime face"
+          desc="Eyelashes, extra eye sparkle and blushing cheeks."
+        />
+      </Section>
+    </>
+  );
+}
+
+function OutfitTab({ a }: { a: Appearance }) {
+  const { look, setLook } = a;
+  return (
+    <>
+      <Preview a={a} />
+      <Section title="Hat">
+        <Options
+          value={look.hat}
+          options={HATS}
+          onChange={(v) => setLook({ hat: v })}
+        />
+        {look.hat !== "none" && (
+          <ColorPicker
+            colors={CLOTH_COLORS}
+            value={look.hatColor}
+            onChange={(c) => setLook({ hatColor: c })}
+          />
+        )}
+      </Section>
+      <Section title="Shirt">
+        <Options
+          value={look.shirt}
+          options={SHIRTS}
+          onChange={(v) => setLook({ shirt: v })}
+        />
+        {look.shirt !== "none" && (
+          <ColorPicker
+            colors={CLOTH_COLORS}
+            value={look.shirtColor}
+            onChange={(c) => setLook({ shirtColor: c })}
+          />
+        )}
+      </Section>
+      <Section title="Pants">
+        <Options
+          value={look.pants}
+          options={PANTS}
+          onChange={(v) => setLook({ pants: v })}
+        />
+        {look.pants !== "none" && (
+          <ColorPicker
+            colors={CLOTH_COLORS}
+            value={look.pantsColor}
+            onChange={(c) => setLook({ pantsColor: c })}
+          />
+        )}
+      </Section>
+    </>
+  );
+}
+
+const Keys = ({ keys }: { keys: string[] }) => (
+  <span className="cpKeys">
+    {keys.map((k, i) => (
+      <span key={k}>
+        {i > 0 && " + "}
+        <kbd>{k}</kbd>
+      </span>
+    ))}
+  </span>
+);
+function SettingsTab({ s }: { s: SystemApi }) {
+  return (
+    <Section
+      title="Shortcuts"
+      hint="These work from anywhere, even when the control panel is hidden."
+    >
+      <div className="cpKeyRow">
+        <div>
+          <b>Control panel</b>
+          <small>Opens it, or minimizes it when it is in front.</small>
+        </div>
+        <Keys keys={["Ctrl", "Alt", "O"]} />
+        <button className="pill" onClick={s.minimizePanel}>
+          Minimize
+        </button>
+      </div>
+      <div className="cpKeyRow">
+        <div>
+          <b>Pet</b>
+          <small>
+            Hiding makes it run off screen. Showing makes it run back in.
+          </small>
+        </div>
+        <Keys keys={["Ctrl", "Alt", "P"]} />
+        <button className="pill" onClick={s.togglePet}>
+          {s.petVisible ? "Hide pet" : "Show pet"}
+        </button>
+      </div>
+    </Section>
+  );
+}
+
 function SoonTab({ title, text }: { title: string; text: string }) {
   return (
     <div className="cpSoon">
@@ -643,6 +839,12 @@ const TABS: (Tab | "divider")[] = [
     icon: "👀",
     label: "Eyes",
     render: (p) => <EyesTab a={p.appearance} />,
+  },
+  {
+    id: "outfit",
+    icon: "👕",
+    label: "Outfit",
+    render: (p) => <OutfitTab a={p.appearance} />,
   },
   {
     id: "camera",
@@ -682,17 +884,18 @@ const TABS: (Tab | "divider")[] = [
       />
     ),
   },
+  {
+    id: "settings",
+    icon: "⚙️",
+    label: "Settings",
+    render: (p) => <SettingsTab s={p.system} />,
+  },
   "divider",
   {
     id: "characters",
     icon: "🐾",
     label: "Characters",
-    render: () => (
-      <SoonTab
-        title="Characters"
-        text="Pick a different pet, or make your own with custom bodies, hats and faces."
-      />
-    ),
+    render: (p) => <CharactersTab a={p.appearance} />,
   },
   {
     id: "pomodoro",
@@ -722,17 +925,6 @@ const TABS: (Tab | "divider")[] = [
     label: "Alarms",
     render: () => (
       <SoonTab title="Alarms" text="Wake-up calls and scheduled alerts." />
-    ),
-  },
-  {
-    id: "settings",
-    icon: "⚙️",
-    label: "Settings",
-    render: () => (
-      <SoonTab
-        title="General settings"
-        text="Startup, hotkeys, AI model and more."
-      />
     ),
   },
 ];

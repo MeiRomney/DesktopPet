@@ -18,13 +18,16 @@ export default function ControlApp() {
   const dance = useDanceSettings();
   const [thinking, setThinking] = useState(false);
   const [danceLeft, setDanceLeft] = useState<number | null>(null); // seconds left; null = no dance-off running
+  const [petVisible, setPetVisible] = useState(true);
 
   useEffect(() => {
     document.title = "Stick: Control panel";
     document.documentElement.classList.add("ctrlWin");
+    window.api.petVisible().then(setPetVisible);
     return window.api.bus.on((m) => {
       if (m.type === "thinking") setThinking(m.on);
       else if (m.type === "danceTick") setDanceLeft(m.on ? m.left : null);
+      else if (m.type === "petVisible") setPetVisible(m.on);
     });
   }, []);
 
@@ -40,6 +43,14 @@ export default function ControlApp() {
       size={size}
       dance={dance}
       danceLeft={danceLeft}
+      system={{
+        petVisible,
+        togglePet: () => {
+          setPetVisible((v) => !v);
+          window.api.togglePet();
+        },
+        minimizePanel: () => window.api.toggleControl(),
+      }}
       onEmote={(id) => window.api.bus.send({ type: "emote", id })}
       onDanceOff={(seconds, ids) => {
         setDanceLeft(seconds);

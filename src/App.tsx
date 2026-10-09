@@ -61,6 +61,8 @@ export default function App() {
     if (m.type === "spawn") act.spawn(m.emoji, m.name);
     else if (m.type === "lookNow") speech.lookAround(true);
     else if (m.type === "emote") playEmote(m.id);
+    else if (m.type === "runOut") runOut();
+    else if (m.type === "runIn") runIn();
     else if (m.type === "danceOff") startDanceOff(m.seconds, m.ids);
     else if (m.type === "danceStop") stopDance();
     else if (m.type === "drawZone") {
@@ -117,6 +119,52 @@ export default function App() {
     setEmote(null); // drop the class first so the same move restarts from frame 0 if clicked again
     window.setTimeout(() => setEmote(id), 30);
     emoteTimer.current = window.setTimeout(stopDance, e.ms + 30);
+  };
+
+  const homePos = useRef<{ x: number; y: number } | null>(null);
+
+  const runOut = () => {
+    const r = core.wrapRef.current!.getBoundingClientRect();
+    if (r.right > 0 && r.left < window.innerWidth)
+      homePos.current = { x: r.left, y: r.top };
+    stopDance();
+    core.busy.current = true; // no wandering or chatter while it is leaving
+    core.hovering.current = false;
+    core.drag.current = null;
+    core.rail.current = null;
+    core.setOpen(false);
+    const { W } = core.dims();
+    const exitX =
+      r.left + W / 2 < window.innerWidth / 2 ? -W - 60 : window.innerWidth + 60;
+    move.glide(exitX, r.top, { speed: 330, then: () => window.api.petLeft() });
+  };
+
+  const runIn = () => {
+    const home = homePos.current ?? {
+      x: window.innerWidth - 240,
+      y: window.innerHeight - 380,
+    };
+    homePos.current = null;
+    const { W } = core.dims();
+    const r = core.wrapRef.current!.getBoundingClientRect();
+    const onScreen = r.right > 0 && r.left < window.innerWidth; // came back before it finished leaving
+    const arrive = () =>
+      move.glide(home.x, home.y, {
+        speed: 330,
+        then: () => {
+          core.busy.current = false;
+          core.setPose("wave");
+          window.setTimeout(() => core.setPose("neutral"), 1500);
+          if (S.current.edges) core.afterDrag.current?.(); // Edges mode: settle on the nearest edge
+        },
+      });
+    if (onScreen) return arrive();
+    const startX =
+      home.x + W / 2 < window.innerWidth / 2 ? -W - 60 : window.innerWidth + 60;
+    core.setMoveMs(0);
+    core.setStride(false);
+    core.setPos({ x: startX, y: home.y }); // teleport while it is off screen
+    window.setTimeout(arrive, 60);
   };
 
   // Dance-off: chain random moves from the chosen mix (never the same one twice in a row) until the time is up.
@@ -272,6 +320,7 @@ export default function App() {
               pose={pose}
               color={appearance.color}
               eyes={appearance.eyes}
+              look={appearance.look}
               w={W}
               h={H}
             />
