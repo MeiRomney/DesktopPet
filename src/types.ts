@@ -11,7 +11,7 @@ export type Reply = { ok: boolean; pose?: Pose; says?: string; error?: string };
 export type Rect = { x: number; y: number; w: number; h: number };
 
 // Where the pet roams: anywhere, inside a drawn box, or on the edges (the taskbar, the top of the focused app).
-export type RoamMode = "free" | "box" | "edges";
+export type RoamMode = "free" | "box" | "edges" | "stay";
 export type EdgeCfg = { on: boolean; screen: boolean; apps: boolean };
 /** The focused app window, in overlay coordinates. */
 export type WinRect = Rect & { maximized: boolean; fullscreen: boolean };

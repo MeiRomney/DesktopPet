@@ -3,12 +3,32 @@ import type { Pose } from "../reactions";
 import type { Obj, Rect } from "../types";
 import { BASE_H, BASE_W } from "../constants";
 import { useSize } from "./useSize";
+import { clamp } from "../utils";
 
 /** The pet's position, pose and size, plus the refs and helpers every other hook shares. */
-export function usePetCore(activeZone: Rect | null, edgesOn: boolean) {
-  const [pos, setPos] = useState({
-    x: window.innerWidth - 240,
-    y: window.innerHeight - 380,
+export function usePetCore(
+  activeZone: Rect | null,
+  edgesOn: boolean,
+  stayOn: boolean,
+) {
+  // const [pos, setPos] = useState({
+  //   x: window.innerWidth - 240,
+  //   y: window.innerHeight - 380,
+  // });
+  const [pos, setPos] = useState(() => {
+    if (localStorage.getItem("roamMode") === "stay") {
+      try {
+        const p = JSON.parse(localStorage.getItem("stayPos") || "null");
+        if (p && Number.isFinite(p.x) && Number.isFinite(p.y))
+          return {
+            x: clamp(p.x, 0, window.innerWidth - BASE_W),
+            y: clamp(p.y, 0, window.innerHeight - BASE_H),
+          };
+      } catch {
+        /* use the default */
+      }
+    }
+    return { x: window.innerWidth - 240, y: window.innerHeight - 380 };
   });
   const [pose, setPose] = useState<Pose>("neutral");
   const [open, setOpen] = useState(false);
@@ -56,6 +76,7 @@ export function usePetCore(activeZone: Rect | null, edgesOn: boolean) {
     zone: activeZone,
     facing,
     edges: edgesOn,
+    stay: stayOn,
   });
   S.current = {
     pos,
@@ -65,6 +86,7 @@ export function usePetCore(activeZone: Rect | null, edgesOn: boolean) {
     zone: activeZone,
     facing,
     edges: edgesOn,
+    stay: stayOn,
   };
 
   // Where the pet may stand (its top-left corner): inside the zone if one is on, otherwise anywhere on screen.

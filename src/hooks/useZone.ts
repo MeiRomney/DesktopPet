@@ -12,10 +12,12 @@ export function useZone() {
       return null;
     }
   });
+  const isMode = (m: unknown): m is RoamMode =>
+    m === "free" || m === "box" || m === "edges" || m === "stay";
   const [mode, setModeState] = useState<RoamMode>(() => {
     // older versions only stored zoneOn
     const m = localStorage.getItem("roamMode");
-    return m === "free" || m === "box" || m === "edges"
+    return isMode(m)
       ? m
       : localStorage.getItem("zoneOn") === "1"
         ? "box"
@@ -83,12 +85,7 @@ export function useZone() {
         } catch {
           setZone(null);
         }
-      } else if (
-        e.key === "roamMode" &&
-        (e.newValue === "free" ||
-          e.newValue === "box" ||
-          e.newValue === "edges")
-      ) {
+      } else if (e.key === "roamMode" && isMode(e.newValue)) {
         setModeState(e.newValue);
         if (e.newValue === "box") flashZone();
       } else if (e.key === "edgeScreen") setEdgeScreen(e.newValue !== "0");
@@ -131,6 +128,7 @@ export function useZone() {
   return {
     zone,
     mode,
+    stay: mode === "stay",
     setMode,
     edges,
     toggleEdge,

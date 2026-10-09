@@ -506,12 +506,14 @@ const MODES: [RoamMode, string][] = [
   ["free", "Free"],
   ["box", "Box"],
   ["edges", "Edges"],
+  ["stay", "Stay"],
 ];
 const MODE_TEXT: Record<RoamMode, string> = {
   free: "Wanders anywhere on the screen.",
   box: "Stays inside a rectangle you draw.",
   edges:
     "Stays on the taskbar and on top of the app you are using. Always upright, never covers your work area, and hides while a fullscreen app is open.",
+  stay: "Stays where it is. Drag it somewhere and it stays there, even after a restart.",
 };
 function ZoneTab({ z, onStartZone }: { z: Zone; onStartZone(): void }) {
   const onMode = (m: RoamMode) => {

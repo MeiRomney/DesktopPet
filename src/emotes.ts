@@ -18,7 +18,7 @@ export const EMOTES = [
     pose: "neutral",
   },
   { id: "robot", label: "Robot", icon: "🤖", ms: 3200, pose: "neutral" },
-  { id: "krump", label: "Krump", icon: "💢", ms: 3200, pose: "angry" },
+  { id: "krump", label: "Krump", icon: "💢", ms: 3200, pose: "neutral" },
   { id: "dancehall", label: "Dancehall", icon: "🌴", ms: 4800, pose: "happy" },
   { id: "ballet", label: "Ballet", icon: "🩰", ms: 4800, pose: "neutral" },
   { id: "locking", label: "Locking", icon: "🔒", ms: 4800, pose: "neutral" },

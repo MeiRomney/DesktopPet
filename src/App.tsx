@@ -22,7 +22,7 @@ const PANEL_W = 236; // width of the small pet menu
 
 export default function App() {
   const zone = useZone();
-  const core = usePetCore(zone.active, zone.edges.on);
+  const core = usePetCore(zone.active, zone.edges.on, zone.mode === "stay");
   const speech = useSpeech(core);
   const move = useMovement(core, speech, zone.active);
   const act = useInteractions(core, speech, move);
@@ -70,6 +70,18 @@ export default function App() {
     }
   };
   useEffect(() => window.api.bus.on((m) => onCmd.current(m)), []);
+
+  // freeze in place the moment Stay is switched on
+  useEffect(() => {
+    if (zone.mode !== "stay" || !core.wrapRef.current) return;
+    const r = core.wrapRef.current.getBoundingClientRect();
+    core.walkId.current++;
+    core.rail.current = null;
+    core.setMoveMs(0);
+    core.setStride(false);
+    core.setPos({ x: r.left, y: r.top });
+    localStorage.setItem("stayPos", JSON.stringify({ x: r.left, y: r.top }));
+  }, [zone.mode]);
 
   const freezePet = () => {
     // stop any walk right where the pet visually is
