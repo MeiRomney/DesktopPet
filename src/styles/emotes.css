@@ -248,6 +248,11 @@
   transform-origin: 63px 126px;
   animation: eSlideR 1.2s infinite alternate ease-in-out;
 }
+.pet.emote-sway .hair,
+.pet.emote-sway .hat {
+  transform-origin: 50px 52px;
+  animation: eSwayFace 1.2s infinite alternate ease-in-out;
+}
 
 /* Shimmy: fast shoulder shake */
 .pet.emote-shimmy svg {
@@ -532,6 +537,11 @@
 }
 .pet.emote-dip .legR {
   animation: eDipLegR 2.4s var(--sine) infinite;
+}
+.pet.emote-dip .hair,
+.pet.emote-dip .hat {
+  transform-origin: 50px 52px;
+  animation: eDipFace 2.4s infinite ease-in-out;
 }
 @keyframes eDipUp {
   0%,

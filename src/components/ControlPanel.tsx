@@ -829,6 +829,12 @@ type Tab = {
 };
 const TABS: (Tab | "divider")[] = [
   {
+    id: "characters",
+    icon: "🐾",
+    label: "Characters",
+    render: (p) => <CharactersTab a={p.appearance} />,
+  },
+  {
     id: "colors",
     icon: "🎨",
     label: "Colors",
@@ -891,12 +897,6 @@ const TABS: (Tab | "divider")[] = [
     render: (p) => <SettingsTab s={p.system} />,
   },
   "divider",
-  {
-    id: "characters",
-    icon: "🐾",
-    label: "Characters",
-    render: (p) => <CharactersTab a={p.appearance} />,
-  },
   {
     id: "pomodoro",
     icon: "🍅",

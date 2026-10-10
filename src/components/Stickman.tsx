@@ -109,7 +109,7 @@ export function Stickman({
   );
   // Fringe and top of the hair, over the head
   const frontHair = look.hair !== "none" && (
-    <>
+    <g className="hair">
       <path
         d={
           look.hair === "spiky"
@@ -136,7 +136,7 @@ export function Stickman({
       {look.hair === "ponytail" && (
         <circle cx="80" cy="18" r="4.5" fill={TIE} strokeWidth="3" />
       )}
-    </>
+    </g>
   );
 
   // Body and arms are drawn in two passes (ink, then color) so they read as one silhouette.
@@ -427,7 +427,7 @@ export function Stickman({
           fill={pose === "shocked" ? INK : "none"}
         />
       </g>
-      {hat}
+      <g className="hat">{hat}</g>
     </svg>
   );
 }
