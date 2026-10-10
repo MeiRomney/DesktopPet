@@ -853,12 +853,6 @@ const TABS: (Tab | "divider")[] = [
     render: (p) => <OutfitTab a={p.appearance} />,
   },
   {
-    id: "camera",
-    icon: "📸",
-    label: "Camera",
-    render: (p) => <CameraTab s={p.camera} />,
-  },
-  {
     id: "size",
     icon: "📏",
     label: "Size",
@@ -926,6 +920,12 @@ const TABS: (Tab | "divider")[] = [
     render: () => (
       <SoonTab title="Alarms" text="Wake-up calls and scheduled alerts." />
     ),
+  },
+  {
+    id: "camera",
+    icon: "📸",
+    label: "Camera",
+    render: (p) => <CameraTab s={p.camera} />,
   },
 ];
 

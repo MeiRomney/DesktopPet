@@ -185,17 +185,17 @@ export function Stickman({
       <g clipPath={`url(#${topClip})`}>
         <rect
           x="24"
-          y="66"
-          width="28"
-          height="33"
+          y="84"
+          width="24"
+          height="15"
           fill={shoulderFill}
           stroke="none"
         />
         <rect
           x="48"
-          y="66"
-          width="28"
-          height="33"
+          y="84"
+          width="24"
+          height="15"
           fill={shoulderFill}
           stroke="none"
         />
