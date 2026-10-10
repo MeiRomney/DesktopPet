@@ -6,6 +6,10 @@ contextBridge.exposeInMainWorld("api", {
   look: () => ipcRenderer.invoke("look"), // AI screen glance
   remember: (text) => ipcRenderer.send("remember", text), // log a scripted event, no AI
   hide: () => ipcRenderer.send("hide"),
+  petLeft: () => ipcRenderer.send("pet-left"),
+  petVisible: () => ipcRenderer.invoke("pet-visible"),
+  togglePet: () => ipcRenderer.send("toggle-pet"),
+  toggleControl: () => ipcRenderer.send("toggle-control"),
   workArea: () => ipcRenderer.invoke("work-area"), // screen minus the taskbar
   trackWindows: (on) => ipcRenderer.send("track-windows", on), // follow the foreground window (Edges mode)
   openControl: () => ipcRenderer.send("open-control"),

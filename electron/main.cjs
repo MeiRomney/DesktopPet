@@ -194,16 +194,64 @@ function createControlWindow() {
   else ctrl.loadFile(PROD_FILE, { hash: "control" });
 }
 
-const toggle = () => {
-  autoHidden = false;
-  win.isVisible() ? win.hide() : win.show();
+// ---- hide / show: the pet runs off screen before the window hides, and runs back in after it shows ----
+let leaving = false; // the pet is running off screen
+let petHidden = false; // the overlay window is hidden
+let hideTimer;
+
+const tellControl = () => {
+  if (ctrl && !ctrl.isDestroyed())
+    ctrl.webContents.send("bus", {
+      type: "petVisible",
+      on: !petHidden && !leaving,
+    });
 };
+function finishHide() {
+  clearTimeout(hideTimer);
+  leaving = false;
+  petHidden = true;
+  if (win && !win.isDestroyed()) win.hide();
+  tellControl();
+}
+function hidePet(auto = false) {
+  if (!win || win.isDestroyed() || petHidden || leaving) return;
+  autoHidden = auto;
+  leaving = true;
+  win.webContents.send("bus", { type: "runOut" });
+  tellControl();
+  hideTimer = setTimeout(() => leaving && finishHide(), 6000); // safety net if the pet never reports back
+}
+function showPet() {
+  if (!win || win.isDestroyed() || (!petHidden && !leaving)) return;
+  clearTimeout(hideTimer);
+  autoHidden = false;
+  const wasHidden = petHidden;
+  leaving = false;
+  petHidden = false;
+  if (wasHidden) win.showInactive();
+  setTimeout(
+    () =>
+      win &&
+      !win.isDestroyed() &&
+      win.webContents.send("bus", { type: "runIn" }),
+    wasHidden ? 120 : 0,
+  );
+  tellControl();
+}
+const togglePet = () => (petHidden || leaving ? showPet() : hidePet());
 
 const openControl = () => {
   if (!ctrl || ctrl.isDestroyed()) return;
   if (ctrl.isMinimized()) ctrl.restore();
   ctrl.show();
   ctrl.focus();
+};
+// Ctrl+Alt+O: open the panel, or minimize it if it is already in front
+const toggleControl = () => {
+  if (!ctrl || ctrl.isDestroyed()) return;
+  if (ctrl.isVisible() && !ctrl.isMinimized() && ctrl.isFocused())
+    ctrl.minimize();
+  else openControl();
 };
 
 app.whenReady().then(() => {
@@ -213,13 +261,8 @@ app.whenReady().then(() => {
   tracker = createTracker((w) => {
     if (!win || win.isDestroyed()) return;
     win.webContents.send("active-window", w);
-    if (w && w.fullscreen && win.isVisible()) {
-      win.hide();
-      autoHidden = true;
-    } else if (!(w && w.fullscreen) && autoHidden) {
-      autoHidden = false;
-      win.showInactive();
-    }
+    if (w && w.fullscreen) hidePet(true);
+    else if (autoHidden) showPet();
   });
   tray = new Tray(
     nativeImage.createFromPath(path.join(__dirname, "../assets/icon.png")),
@@ -228,20 +271,24 @@ app.whenReady().then(() => {
   tray.setContextMenu(
     Menu.buildFromTemplate([
       { label: "Control Panel", click: openControl },
-      { label: "Show / Hide", click: toggle },
+      { label: "Show / Hide", click: togglePet },
       { label: "Quit", click: () => app.quit() },
     ]),
   );
-  tray.on("click", toggle);
-  globalShortcut.register("Control+Alt+P", toggle);
-  globalShortcut.register("Control+Alt+O", openControl);
+  tray.on("click", togglePet);
+  globalShortcut.register("Control+Alt+P", togglePet);
+  globalShortcut.register("Control+Alt+O", toggleControl);
 });
 
 ipcMain.on(
   "click-through",
   (_e, on) => win && win.setIgnoreMouseEvents(on, { forward: true }),
 );
-ipcMain.on("hide", () => win && win.hide());
+ipcMain.on("hide", () => hidePet()); // "go away" in the chat
+ipcMain.on("pet-left", () => leaving && finishHide()); // the pet is off screen
+ipcMain.handle("pet-visible", () => !petHidden && !leaving);
+ipcMain.on("toggle-pet", togglePet);
+ipcMain.on("toggle-control", toggleControl);
 ipcMain.on("open-control", openControl);
 
 // Relay messages between the pet window and the control panel window.
@@ -250,10 +297,8 @@ ipcMain.on("bus", (e, msg) => {
   const target = fromPet ? ctrl : win;
   if (!msg || !target || target.isDestroyed()) return;
   if (msg.type === "drawZone") {
-    // draw on the overlay: get the panel out of the way
-    if (ctrl) ctrl.minimize();
-    autoHidden = false;
-    if (!win.isVisible()) win.show();
+    if (ctrl) ctrl.minimize(); // draw on the overlay: get the panel out of the way
+    showPet();
     win.focus();
   }
   if (msg.type === "zoneDone" && ctrl) {
@@ -278,10 +323,7 @@ ipcMain.on("track-windows", (_e, on) => {
   if (on) tracker.start();
   else {
     tracker.stop();
-    if (autoHidden && win) {
-      autoHidden = false;
-      win.showInactive();
-    }
+    if (autoHidden) showPet();
   }
 });
 app.on("will-quit", () => {

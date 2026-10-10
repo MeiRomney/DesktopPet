@@ -35,7 +35,10 @@ export type BusMsg =
   | { type: "danceOff"; seconds: number; ids: string[] }
   | { type: "danceTick"; on: boolean; left: number }
   | { type: "danceStop" }
-  | { type: "thinking"; on: boolean };
+  | { type: "thinking"; on: boolean }
+  | { type: "runOut" }
+  | { type: "runIn" }
+  | { type: "petVisible"; on: boolean };
 
 declare global {
   interface Window {
@@ -45,6 +48,10 @@ declare global {
       look(): Promise<Reply>;
       remember(t: string): void;
       hide(): void;
+      petLeft(): void;
+      petVisible(): Promise<boolean>;
+      togglePet(): void;
+      toggleControl(): void;
       workArea(): Promise<Rect>;
       trackWindows(on: boolean): void;
       openControl(): void;

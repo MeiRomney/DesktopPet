@@ -542,7 +542,7 @@
     transform: translate(0, -3px) rotate(2deg) scale(0.98, 1.03);
   }
   38% {
-    transform: translate(-3x, 9px) rotate(-8deg) scale(1.05, 0.93);
+    transform: translate(-3px, 9px) rotate(-8deg) scale(1.05, 0.93);
   }
   60% {
     transform: translate(-3px, 10px) rotate(-9deg) scale(1.05, 0.92);
