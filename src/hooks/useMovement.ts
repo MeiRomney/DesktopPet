@@ -24,6 +24,7 @@ export function useMovement(
     setPose,
     rail,
     edgeStep,
+    edgeFlee,
     drag,
     objDrag,
     hovering,
@@ -64,6 +65,11 @@ export function useMovement(
     if (S.current.stay) {
       setPose("scared");
       window.setTimeout(() => setPose("neutral"), 1500);
+      return;
+    }
+    if (S.current.edges && edgeFlee.current) {
+      setPose("scared");
+      edgeFlee.current(ox, oy, () => setPose("neutral"));
       return;
     }
     const { W, H } = dims();
