@@ -173,7 +173,7 @@ function createControlWindow() {
     height: 520,
     minWidth: 560,
     minHeight: 380,
-    title: "Stick: Control panel",
+    title: "Jubilibi: Control panel",
     icon: path.join(__dirname, "../assets/icon.png"),
     backgroundColor: "#ffffff",
     autoHideMenuBar: true,
@@ -267,7 +267,7 @@ app.whenReady().then(() => {
   tray = new Tray(
     nativeImage.createFromPath(path.join(__dirname, "../assets/icon.png")),
   );
-  tray.setToolTip("Stick");
+  tray.setToolTip("Jubilibi");
   tray.setContextMenu(
     Menu.buildFromTemplate([
       { label: "Control Panel", click: openControl },

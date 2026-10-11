@@ -21,7 +21,7 @@ export default function ControlApp() {
   const [petVisible, setPetVisible] = useState(true);
 
   useEffect(() => {
-    document.title = "Stick: Control panel";
+    document.title = "Jubilibi: Control panel";
     document.documentElement.classList.add("ctrlWin");
     window.api.petVisible().then(setPetVisible);
     return window.api.bus.on((m) => {
