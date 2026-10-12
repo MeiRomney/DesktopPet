@@ -34,6 +34,7 @@ export function useInteractions(c: PetCore, speech: Speech, move: Movement) {
     H,
     wrapRef,
     bounds,
+    toyAct,
   } = c;
   const { sayLocal, reactTo } = speech;
   const { walkTo, flee } = move;
@@ -42,6 +43,7 @@ export function useInteractions(c: PetCore, speech: Speech, move: Movement) {
     hovering.current = false;
     setObjs((l) => l.filter((x) => x.id !== o.id));
     window.api.clickThrough(true);
+    toyAct.current?.(o.name, o.emoji);
     reactTo(
       scripted(o.emoji, "use"),
       `The user dragged ${o.name} ${o.emoji} onto you and used it on you!`,

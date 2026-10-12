@@ -19,6 +19,9 @@ import { clamp } from "./utils";
 import { EMOTES, DANCE_LINES } from "./emotes";
 import { ITEMS } from "./reactions";
 import { readDanceSettings } from "./hooks/useDanceSettings";
+import { TOY_ACTS } from "./toyActs";
+import type { ToyActDef } from "./toyActs";
+import { ToyActProps } from "./components/ToyActProps";
 
 const PANEL_W = 236; // width of the small pet menu
 
@@ -40,6 +43,11 @@ export default function App() {
   const sendTick = (on: boolean, left: number) =>
     window.api.bus.send({ type: "danceTick", on, left });
   const dancing = useRef(false);
+  const [acting, setActing] = useState<{
+    def: ToyActDef;
+    emoji: string;
+  } | null>(null);
+  const actTimer = useRef<number>();
   const {
     pos,
     pose,
@@ -50,6 +58,7 @@ export default function App() {
     moveMs,
     stride,
     setStride,
+    size,
     W,
     H,
     wrapRef,
@@ -109,6 +118,30 @@ export default function App() {
     core.setPose("neutral");
     core.busy.current = false;
   };
+
+  const playToyAct = (name: string, emoji: string) => {
+    const def = TOY_ACTS[name];
+    if (!def) return;
+    window.clearTimeout(emoteTimer.current);
+    window.clearTimeout(actTimer.current);
+    if (dancing.current) stopDance();
+    setEmote(null);
+    const r = core.wrapRef.current!.getBoundingClientRect(); // freeze where it visually is
+    core.walkId.current++;
+    core.rail.current = null;
+    core.setMoveMs(0);
+    core.setStride(false);
+    core.setPos({ x: r.left, y: r.top });
+    core.setFacing(1);
+    core.busy.current = true;
+    setActing(null); // drop first so the same act restarts cleanly
+    window.setTimeout(() => setActing({ def, emoji }), 30);
+    actTimer.current = window.setTimeout(() => {
+      setActing(null);
+      core.busy.current = false;
+    }, def.ms + 60);
+  };
+  core.toyAct.current = playToyAct;
 
   const playEmote = (id: string) => {
     const e = EMOTES.find((x) => x.id === id);
@@ -312,11 +345,13 @@ export default function App() {
     left: pos.x,
     top: pos.y,
     width: W,
+    "--k": size,
     "--lift": `${lift}px`,
     transition: moveMs
       ? `left ${moveMs}ms cubic-bezier(0.45, 0, 0.55, 1), top ${moveMs}ms cubic-bezier(0.45, 0, 0.55, 1)`
       : "none",
   } as CSSProperties;
+  const shownPose = acting ? acting.def.pose : pose;
 
   return (
     <>
@@ -330,7 +365,7 @@ export default function App() {
           side={pos.x > 230 ? "left" : "right"}
         />
         <div
-          className={`pet ${pose}${stride ? " walking" : ""}${emote ? ` emote emote-${emote}` : ""}`}
+          className={`pet ${shownPose}${stride ? " walking" : ""}${emote ? ` emote emote-${emote}` : ""}${acting ? ` act act-${acting.def.id}` : ""}`}
           onMouseDown={act.down}
           onAnimationIteration={(e) => {
             if (e.animationName.startsWith("step") && S.current.moveMs === 0)
@@ -339,7 +374,8 @@ export default function App() {
         >
           <div style={{ transform: `scaleX(${facing})` }}>
             <Stickman
-              pose={pose}
+              pose={shownPose}
+              armsDown={!!acting?.def.armsDown}
               color={appearance.color}
               eyes={appearance.eyes}
               look={appearance.look}
@@ -348,6 +384,7 @@ export default function App() {
             />
           </div>
         </div>
+        {acting && <ToyActProps act={acting.def} emoji={acting.emoji} />}
         {open && (
           <PetMenu
             panelRef={panelEl}

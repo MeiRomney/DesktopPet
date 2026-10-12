@@ -44,6 +44,7 @@ export function Stickman({
   eyes = DEFAULT_EYES,
   look = DEFAULT_LOOK,
   uid = "pet",
+  armsDown = false,
 }: {
   pose: Pose;
   color: string;
@@ -52,6 +53,7 @@ export function Stickman({
   eyes?: Eyes;
   look?: Look;
   uid?: string;
+  armsDown?: boolean;
 }) {
   const up = pose === "scared" || pose === "shocked" || pose === "happy";
   const wide = pose === "scared" || pose === "shocked";
@@ -72,8 +74,13 @@ export function Stickman({
     "M36 80 C26 94 20 116 26 134 Q31 148 50 148 Q69 148 74 134 C80 116 74 94 64 80 Z";
   const down = ["M33 88 Q14 106 17 128", "M67 88 Q86 106 83 128"];
   const raised = ["M33 88 Q16 80 14 62", "M67 88 Q84 80 86 62"];
-  const arms = pose === "wave" ? [down[0], raised[1]] : up ? raised : down;
-
+  const arms = armsDown
+    ? down
+    : pose === "wave"
+      ? [down[0], raised[1]]
+      : up
+        ? raised
+        : down;
   const legs = [
     [37, "legL"],
     [63, "legR"],
