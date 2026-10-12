@@ -14,6 +14,7 @@ import { useDanceSettings } from "../hooks/useDanceSettings";
 import type { DanceMode } from "../hooks/useDanceSettings";
 import {
   CHARACTERS,
+  CLIPS,
   CLOTH_COLORS,
   DEFAULT_LOOK,
   HAIRS,
@@ -709,6 +710,40 @@ function CharactersTab({ a }: { a: Appearance }) {
           onChange={(c) => a.setLook({ hairColor: c })}
         />
       </Section>
+      <Section title="Hair extras">
+        <Toggle
+          on={a.look.ahoge}
+          onChange={() => a.setLook({ ahoge: !a.look.ahoge })}
+          label="Ahoge"
+          desc="The little curl on top."
+        />
+        <Toggle
+          on={a.look.streak}
+          onChange={() => a.setLook({ streak: !a.look.streak })}
+          label="Color streak"
+        />
+        {a.look.streak && (
+          <ColorPicker
+            colors={HAIR_COLORS}
+            value={a.look.streakColor}
+            onChange={(c) => a.setLook({ streakColor: c })}
+          />
+        )}
+      </Section>
+      <Section title="Hair clip">
+        <Options
+          value={a.look.clip}
+          options={CLIPS}
+          onChange={(v) => a.setLook({ clip: v })}
+        />
+        {a.look.clip !== "none" && (
+          <ColorPicker
+            colors={CLOTH_COLORS}
+            value={a.look.clipColor}
+            onChange={(c) => a.setLook({ clipColor: c })}
+          />
+        )}
+      </Section>
       <Section title="Face">
         <Toggle
           on={a.look.anime}
@@ -767,6 +802,33 @@ function OutfitTab({ a }: { a: Appearance }) {
             onChange={(c) => setLook({ pantsColor: c })}
           />
         )}
+      </Section>
+      <Section title="Socks">
+        <Toggle
+          on={look.socks}
+          onChange={() => setLook({ socks: !look.socks })}
+          label="Long socks"
+          desc="Knee-high socks on the legs."
+        />
+        {look.socks && (
+          <ColorPicker
+            colors={CLOTH_COLORS}
+            value={look.socksColor}
+            onChange={(c) => setLook({ socksColor: c })}
+          />
+        )}
+        {look.socks && (
+          <Toggle
+            on={look.thighHigh}
+            onChange={() => setLook({ thighHigh: !look.thighHigh })}
+            label="Thigh-high"
+          />
+        )}
+        <Toggle
+          on={look.garter}
+          onChange={() => setLook({ garter: !look.garter })}
+          label="Thigh strap"
+        />
       </Section>
     </>
   );

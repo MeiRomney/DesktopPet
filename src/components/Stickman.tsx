@@ -2,7 +2,7 @@ import type { Pose } from "../reactions";
 import { INK } from "../constants";
 import type { Eyes } from "../types";
 import { DEFAULT_LOOK } from "../characters";
-import type { Look, ShirtId } from "../characters";
+import type { Look, ShirtId, HairId } from "../characters";
 
 const DEFAULT_EYES: Eyes = {
   size: 1,
@@ -18,12 +18,33 @@ const SLEEVE: Record<ShirtId, number> = {
   stripe: 38,
   long: 92,
   hoodie: 92,
+  crop: 38,
+  sailor: 38,
+  dress: 0,
+  sweater: 92,
+  offshoulder: 92,
+  halter: 0,
 };
 const TOP = "M8 44 C2 -14 98 -14 92 44";
 const FRINGE_JAG = `${TOP} L86 32 L78 38 L72 24 L64 34 L56 22 L48 34 L40 24 L32 36 L24 28 L16 38 L10 34 Z`;
 const FRINGE_SOFT = `${TOP} L90 30 Q50 42 10 30 Z`;
 const SPIKY =
   "M8 44 L2 24 L14 26 L8 6 L24 16 L30 -6 L42 10 L52 -10 L62 10 L74 -6 L78 16 L92 6 L86 26 L98 24 L92 44 L86 32 L78 38 L72 24 L64 34 L56 22 L48 34 L40 24 L32 36 L24 28 L16 38 L10 34 Z";
+const FRINGE_BLUNT = `${TOP} L91 28 L9 28 Z`;
+const FRINGE_CURLY = `${TOP} Q86 30 80 36 Q74 22 66 32 Q58 20 50 30 Q42 20 34 32 Q26 22 20 36 Q14 30 8 44 Z`;
+const FRINGE_PIXIE = `${TOP} L92 26 Q70 18 52 34 Q36 22 8 32 Z`;
+const FRINGES: Partial<Record<HairId, string>> = {
+  spiky: SPIKY,
+  bob: FRINGE_SOFT,
+  long: FRINGE_SOFT,
+  twintails: FRINGE_SOFT,
+  wavy: FRINGE_SOFT,
+  twinbuns: FRINGE_SOFT,
+  braid: FRINGE_SOFT,
+  hime: FRINGE_BLUNT,
+  curly: FRINGE_CURLY,
+  pixie: FRINGE_PIXIE,
+};
 // Shirt: flares out below the chest so it covers the hips. Not clipped to the body.
 const SHIRT =
   "M36 80 C27 92 22 102 23 112 C19 122 20 132 22 138 Q50 148 78 138 C80 132 81 122 77 112 C78 102 73 92 64 80 Z";
@@ -31,6 +52,11 @@ const SHIRT_HEM =
   "M23 112 C19 122 20 132 22 138 Q50 148 78 138 C80 132 81 122 77 112"; // outline of the flared part only
 const SHIRT_CLIP =
   "M30 82 C26 94 20 116 24 134 Q31 148 50 148 Q69 148 76 136 C80 116 74 94 70 82 Z";
+
+const SKIRT_D =
+  "M23.5 110 C20 119 8 130 6 149 Q18 155 30 149 Q40 155 50 150 Q60 155 70 149 Q82 155 94 149 C92 130 80 119 76.5 110 Z";
+const MINI_D =
+  "M20.5 110 C16 120 13 130 10 146 Q20 152 30 146 Q40 152 50 147 Q60 152 70 146 Q80 152 90 146 C87 130 84 120 79.5 110 Z";
 
 // Chunky blob character: thick outline, big head, tube limbs, white eyes with pupils glancing sideways.
 // Rig layers (see emotes.css): .upper = hips+torso+arms+head, .head = head, .armL/.armR, .legL/.legR.
@@ -104,13 +130,27 @@ export function Stickman({
   // Hair behind the head and body (drawn inside a .head group so it moves with the head)
   const backHair = (
     <>
+      {look.streak && ["long", "hime", "wavy", "bob"].includes(look.hair) && (
+        <>
+          <path
+            d="M8 50 V104 H18 V50 Z"
+            fill={look.streakColor}
+            stroke="none"
+          />
+          <path
+            d="M92 50 V104 H82 V50 Z"
+            fill={look.streakColor}
+            stroke="none"
+          />
+        </>
+      )}
       {look.hair === "bob" && (
         <path
           d="M6 40 C4 -10 96 -10 94 40 V70 Q94 80 84 80 H16 Q6 80 6 70 Z"
           {...hp}
         />
       )}
-      {look.hair === "long" && (
+      {(look.hair === "long" || look.hair === "hime") && (
         <path
           d="M6 40 C4 -10 96 -10 94 40 V112 Q94 124 82 124 H18 Q6 124 6 112 Z"
           {...hp}
@@ -129,11 +169,75 @@ export function Stickman({
         <path d="M76 16 C108 18 112 70 92 100 C92 78 86 58 76 46 Z" {...hp} />
       )}
       {look.hair === "bun" && <circle cx="50" cy="-4" r="13" {...hp} />}
+      {look.hair === "wavy" && (
+        <path
+          d="M6 40 C4 -10 96 -10 94 40 V104 Q94 112 86 108 Q80 120 72 110 Q66 120 58 111 Q50 122 42 111 Q34 120 28 110 Q20 120 14 108 Q6 112 6 104 Z"
+          {...hp}
+        />
+      )}
+      {look.hair === "twinbuns" && (
+        <>
+          <circle cx="20" cy="4" r="13" {...hp} />
+          <circle cx="80" cy="4" r="13" {...hp} />
+        </>
+      )}
+      {look.hair === "curly" && (
+        <>
+          {[
+            [22, 2, 16],
+            [50, -8, 16],
+            [78, 2, 16],
+            [8, 34, 14],
+            [92, 34, 14],
+          ].map(([x, y, r]) => (
+            <circle key={`${x}${y}`} cx={x} cy={y} r={r} {...hp} />
+          ))}
+          <circle cx="50" cy="30" r="44" fill={look.hairColor} stroke="none" />
+        </>
+      )}
+      {look.hair === "sidepony" && (
+        <path d="M24 16 C-8 18 -12 70 8 100 C8 78 14 58 24 46 Z" {...hp} />
+      )}
     </>
   );
   // Fringe and top of the hair, over the head
   const frontHair = look.hair !== "none" && (
     <>
+      {look.ahoge && (
+        <>
+          <path
+            d="M50 4 C46 -12 60 -22 68 -12"
+            fill="none"
+            stroke={INK}
+            strokeWidth="9"
+          />
+          <path
+            d="M50 4 C46 -12 60 -22 68 -12"
+            fill="none"
+            stroke={look.hairColor}
+            strokeWidth="4.5"
+          />
+        </>
+      )}
+      {look.hair === "braid" && (
+        <>
+          {/* the lock starts inside the hair cap, so it reads as part of the same hair */}
+          <path
+            d="M90 22 C102 40 100 64 92 78 L72 72 C80 62 82 46 78 22 Z"
+            {...hp}
+          />
+          {[
+            [82, 82, 7.5],
+            [82, 95, 7],
+            [81, 107, 6.5],
+            [80, 118, 5.5],
+          ].map(([x, y, r]) => (
+            <circle key={y} cx={x} cy={y} r={r} {...hp} />
+          ))}
+          <circle cx="80" cy="125" r="3.5" fill={TIE} strokeWidth="3" />
+        </>
+      )}
+      <path d={FRINGES[look.hair] ?? FRINGE_JAG} {...hp} />
       <path
         d={
           look.hair === "spiky"
@@ -160,6 +264,86 @@ export function Stickman({
       {look.hair === "ponytail" && (
         <circle cx="80" cy="18" r="4.5" fill={TIE} strokeWidth="3" />
       )}
+      {look.hair === "hime" && (
+        <>
+          <path d="M8 40 V96 Q8 104 16 104 Q24 104 24 96 V52 Z" {...hp} />
+          <path d="M92 40 V96 Q92 104 84 104 Q76 104 76 96 V52 Z" {...hp} />
+        </>
+      )}
+      {look.hair === "sidepony" && (
+        <circle cx="20" cy="18" r="4.5" fill={TIE} strokeWidth="3" />
+      )}
+      {look.streak && (
+        <>
+          <path
+            d="M30 6 Q20 22 24 40 L33 38 Q31 24 38 8 Z"
+            fill={look.streakColor}
+            stroke="none"
+          />
+          <path
+            d="M70 6 Q80 22 76 40 L67 38 Q69 24 62 8 Z"
+            fill={look.streakColor}
+            stroke="none"
+          />
+        </>
+      )}
+      {look.clip === "star" && (
+        <path
+          d="M24 19 L26.4 24.8 L32.6 25.2 L27.8 29.2 L29.3 35.3 L24 32 L18.7 35.3 L20.2 29.2 L15.4 25.2 L21.6 24.8 Z"
+          fill={look.clipColor}
+          stroke={INK}
+          strokeWidth="2.5"
+        />
+      )}
+      {look.clip === "heart" && (
+        <path
+          d="M76 36 C64 28 68 18 76 24 C84 18 88 28 76 36 Z"
+          fill={look.clipColor}
+          stroke={INK}
+          strokeWidth="2.5"
+        />
+      )}
+      {look.clip === "x" && (
+        <>
+          <path d="M16 22 l12 12 M28 22 l-12 12" stroke={INK} strokeWidth="7" />
+          <path
+            d="M16 22 l12 12 M28 22 l-12 12"
+            stroke={look.clipColor}
+            strokeWidth="3.5"
+          />
+        </>
+      )}
+      {look.clip === "pins" && (
+        <>
+          <path
+            d="M18 20 L26 32 M24 18 L32 30"
+            stroke={INK}
+            strokeWidth="6.5"
+          />
+          <path
+            d="M18 20 L26 32 M24 18 L32 30"
+            stroke={look.clipColor}
+            strokeWidth="3"
+          />
+        </>
+      )}
+      {look.clip === "bunny" && (
+        <g strokeWidth="2.5">
+          <ellipse cx="74" cy="20" rx="3" ry="7" fill={look.clipColor} />
+          <ellipse cx="82" cy="20" rx="3" ry="7" fill={look.clipColor} />
+          <circle cx="78" cy="31" r="8" fill={look.clipColor} />
+          <circle cx="75" cy="30" r="1.3" fill={INK} stroke="none" />
+          <circle cx="81" cy="30" r="1.3" fill={INK} stroke="none" />
+        </g>
+      )}
+      {look.clip === "ribbons" && (
+        <g fill={look.clipColor} strokeWidth="3">
+          <path d="M22 8 L8 0 L8 16 Z M22 8 L36 0 L36 16 Z" />
+          <path d="M78 8 L64 0 L64 16 Z M78 8 L92 0 L92 16 Z" />
+          <circle cx="22" cy="8" r="3.5" />
+          <circle cx="78" cy="8" r="3.5" />
+        </g>
+      )}
     </>
   );
 
@@ -173,7 +357,12 @@ export function Stickman({
   );
 
   // Drawn on top of the body and the shirt, so the arms stay visible when they swing in front of the torso.
-  const shoulderFill = look.shirt !== "none" ? look.shirtColor : color;
+  const shoulderFill =
+    look.shirt === "none" ||
+    look.shirt === "offshoulder" ||
+    look.shirt === "halter"
+      ? color
+      : look.shirtColor;
   const armsLayer = (
     <>
       {/* 1. arm outlines */}
@@ -241,17 +430,48 @@ export function Stickman({
     </>
   );
 
+  const skirt = (d: string, c: string, detail: boolean) => (
+    <g>
+      <path d={d} fill={c} stroke="none" />
+      {detail && (
+        <>
+          <path
+            d="M36 118 Q33 134 29 149 Q40 155 50 150 Q47 134 46 118 Z M64 118 Q67 134 71 149 Q60 155 50 150 Q53 134 54 118 Z"
+            fill="#000"
+            fillOpacity=".1"
+            stroke="none"
+          />
+          <path
+            d="M36 118 Q33 134 29 149 M50 120 V150 M64 118 Q67 134 71 149"
+            fill="none"
+            strokeWidth="2"
+            strokeOpacity=".4"
+          />
+        </>
+      )}
+      <path d={d.replace(" Z", "")} fill="none" strokeWidth="2.5" />
+    </g>
+  );
+
   // Clothes on the torso. Lives inside the second .upper, so it moves with the body.
   // Sleeves reuse the arm classes so they swing with the arms.
+  const shirtTop =
+    look.shirt === "offshoulder" ? 92 : look.shirt === "halter" ? 88 : 76;
+  const shirtBottom =
+    look.shirt === "crop"
+      ? 108
+      : look.shirt === "offshoulder" || look.shirt === "halter"
+        ? 106
+        : 140;
   const torsoClothes = (
     <>
       {look.shirt !== "none" && (
         <g clipPath={`url(#${bodyClip})`}>
           <rect
             x="10"
-            y="76"
+            y={shirtTop}
             width="80"
-            height="64"
+            height={shirtBottom - shirtTop}
             fill={look.shirtColor}
             stroke="none"
           />
@@ -268,10 +488,38 @@ export function Stickman({
           {look.shirt === "hoodie" && (
             <path d="M36 122 Q50 130 64 122" strokeWidth="2.5" />
           )}
-          {look.shirt !== "tank" && (
+          {!["tank", "offshoulder", "halter"].includes(look.shirt) && (
             <path d="M40 80 Q50 90 60 80" strokeWidth="2.5" />
           )}
-          <path d="M10 140 H90" strokeWidth="2.5" />
+          {look.shirt === "halter" && (
+            <path
+              d="M40 82 L43 90 M60 82 L57 90"
+              stroke={look.shirtColor}
+              strokeWidth="3"
+            />
+          )}
+          <path d={`M10 ${shirtBottom} H90`} strokeWidth="2.5" />
+          {look.shirt === "sailor" && (
+            <>
+              <path
+                d="M33 84 L50 104 L67 84 L61 82 L50 94 L39 82 Z"
+                fill="#fff"
+                strokeWidth="2.5"
+              />
+              <path
+                d="M50 104 L40 98 L40 110 Z M50 104 L60 98 L60 110 Z"
+                fill="#e5566d"
+                strokeWidth="2"
+              />
+            </>
+          )}
+          {look.shirt === "sweater" && (
+            <path
+              d="M34 82 Q50 94 66 82 V88 Q50 100 34 88 Z"
+              fill={look.shirtColor}
+              strokeWidth="2.5"
+            />
+          )}
         </g>
       )}
 
@@ -299,6 +547,10 @@ export function Stickman({
           </g>
         </>
       )}
+
+      {look.shirt === "dress" && skirt(SKIRT_D, look.shirtColor, true)}
+      {look.pants === "skirt" && skirt(SKIRT_D, look.pantsColor, true)}
+      {look.pants === "mini" && skirt(MINI_D, look.pantsColor, false)}
 
       {look.pants === "skirt" && (
         <g>
@@ -442,6 +694,69 @@ export function Stickman({
           <circle cx="50" cy="-34" r="5" fill="#fff" strokeWidth="3" />
         </g>
       )}
+      {look.hat === "bow" && (
+        <g>
+          <path d="M68 4 L46 -8 L46 16 Z M68 4 L90 -8 L90 16 Z" {...hc} />
+          <circle cx="68" cy="4" r="5" {...hc} />
+        </g>
+      )}
+      {look.hat === "flower" && (
+        <g>
+          {[
+            [76, 2],
+            [84, 8],
+            [81, 17],
+            [71, 17],
+            [68, 8],
+          ].map(([x, y]) => (
+            <circle
+              key={`${x}${y}`}
+              cx={x}
+              cy={y}
+              r="6"
+              fill={look.hatColor}
+              stroke={INK}
+              strokeWidth="3"
+            />
+          ))}
+          <circle
+            cx="76"
+            cy="10"
+            r="5"
+            fill="#f0a030"
+            stroke={INK}
+            strokeWidth="3"
+          />
+        </g>
+      )}
+      {look.hat === "witch" && (
+        <g>
+          <ellipse cx="50" cy="14" rx="46" ry="8" {...hc} />
+          <path
+            d="M26 12 C34 -4 42 -20 46 -40 Q58 -44 66 -34 C62 -20 68 0 74 12 Z"
+            {...hc}
+          />
+          <path
+            d="M30 4 Q50 10 70 4 L72 10 Q50 16 28 10 Z"
+            fill="#fff"
+            fillOpacity=".4"
+            stroke="none"
+          />
+        </g>
+      )}
+      {look.hat === "phones" && (
+        <g>
+          <path d="M12 44 C8 -6 92 -6 88 44" fill="none" strokeWidth="5" />
+          <rect x="2" y="36" width="14" height="26" rx="6" {...hc} />
+          <rect x="84" y="36" width="14" height="26" rx="6" {...hc} />
+        </g>
+      )}
+      {look.hat === "horns" && (
+        <g>
+          <path d="M18 24 C6 14 8 -4 22 -8 C16 2 20 12 30 16 Z" {...hc} />
+          <path d="M82 24 C94 14 92 -4 78 -8 C84 2 80 12 70 16 Z" {...hc} />
+        </g>
+      )}
     </>
   );
 
@@ -515,6 +830,33 @@ export function Stickman({
                 height="52"
                 fill={look.pantsColor}
                 stroke="none"
+                clipPath={`url(#${legClip(x)})`}
+              />
+            )}
+            {look.socks && (
+              <>
+                <rect
+                  x={x - 12}
+                  y={look.thighHigh ? 122 : 136}
+                  width="24"
+                  height="40"
+                  fill={look.socksColor}
+                  stroke="none"
+                  clipPath={`url(#${legClip(x)})`}
+                />
+                <path
+                  d={`M${x - 10.5} 136 H${x + 10.5}`}
+                  stroke="#fff"
+                  strokeOpacity=".7"
+                  strokeWidth="3"
+                />
+              </>
+            )}
+            {look.garter && x === 63 && (
+              <path
+                d={`M${x - 12} 130 H${x + 12}`}
+                stroke="#2b2b33"
+                strokeWidth="5"
                 clipPath={`url(#${legClip(x)})`}
               />
             )}
