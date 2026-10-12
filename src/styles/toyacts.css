@@ -26,7 +26,8 @@
 /* CAKE: right hand lifts it to the face, the head bobs, the cake shrinks bite by bite */
 .prop-cake {
   left: 106%;
-  top: 33%;
+  /* top: 33%; */
+  top: 40%;
   animation: actCake 3.3s linear both;
 }
 .pet.act-cake .armR {
@@ -91,7 +92,8 @@
 /* CAT: it trots in, the right hand pats it, it purrs, hearts float up, it trots off */
 .prop-cat {
   left: 114%;
-  top: 70%;
+  /* top: 70%; */
+  top: 74%;
   animation: actCat 3.6s ease-out both;
 }
 .prop-cat .toyEmoji {
@@ -99,7 +101,8 @@
 }
 .fx-cat {
   left: 112%;
-  top: 42%;
+  /* top: 42%; */
+  top: 52%;
   opacity: 0;
   font-size: calc(var(--k, 1) * 18px);
   animation: actHeart 1.1s ease-out 0.6s 3 both;
@@ -188,12 +191,14 @@
 /* PIANO: drops on the head, the pet is squashed flat and sees stars, the piano lifts away, the pet pops back */
 .prop-piano {
   left: 50%;
-  top: 18%;
+  /* top: 18%; */
+  top: 22%;
   animation: actPiano 3s both;
 }
 .fx-piano {
   left: 50%;
-  top: 12%;
+  /* top: 12%; */
+  top: 15%;
   opacity: 0;
   font-size: calc(var(--k, 1) * 26px);
   animation: actStars 1.7s ease-in-out 1s both;
@@ -278,7 +283,8 @@
 /* BOMB: it sits at the pet's feet and shakes, then KABOOM. The pet is blown up, covered in soot, and recovers */
 .prop-bomb {
   left: 50%;
-  top: 84%;
+  /* top: 84%; */
+  top: 86%;
   animation: actBomb 3.2s both;
 }
 .prop-bomb .toyEmoji {
@@ -286,7 +292,8 @@
 }
 .fx-bomb {
   left: 50%;
-  top: 60%;
+  /* top: 60%; */
+  top: 68%;
   opacity: 0;
   font-size: calc(var(--k, 1) * 60px);
   animation: actBoom 3.2s both;
@@ -371,12 +378,14 @@
 /* GUN: slides in from the right and aims, pew, the pet flinches (hands up the whole time) */
 .prop-gun {
   left: 130%;
-  top: 25%;
+  /* top: 25%; */
+  top: 31%;
   animation: actGun 2.6s ease-out both;
 }
 .fx-gun {
   left: 112%;
-  top: 25%;
+  /* top: 25%; */
+  top: 31%;
   opacity: 0;
   font-size: calc(var(--k, 1) * 26px);
   animation: actPew 2.6s both;
@@ -450,12 +459,14 @@
 /* SWORD: wind-up, a big slash across the pet, the pet ducks, sparkle */
 .prop-sword {
   left: 60%;
-  top: 20%;
+  /* top: 20%; */
+  top: 25%;
   animation: actSword 2.4s ease-in-out both;
 }
 .fx-sword {
   left: 42%;
-  top: 48%;
+  /* top: 48%; */
+  top: 59%;
   opacity: 0;
   font-size: calc(var(--k, 1) * 30px);
   animation: actSpark 2.4s both;

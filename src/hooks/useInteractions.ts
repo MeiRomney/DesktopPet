@@ -7,6 +7,7 @@ import { clamp } from "../utils";
 import type { PetCore } from "./usePetCore";
 import type { Speech } from "./useSpeech";
 import type { Movement } from "./useMovement";
+import { BASE_W, VB_H } from "../constants";
 
 /** Mouse interactions: dragging the pet and objects, dropping objects, and how the pet reacts to them. */
 export function useInteractions(c: PetCore, speech: Speech, move: Movement) {
@@ -202,7 +203,8 @@ export function useInteractions(c: PetCore, speech: Speech, move: Movement) {
       // right of the pet, level with its head
       const r = wrapRef.current!.getBoundingClientRect();
       x = clamp(r.left + W + 12, 0, window.innerWidth - 50);
-      y = r.top + (45 / 178) * H - 22;
+      // y = r.top + (45 / 178) * H - 22;
+      y = r.top + (45 / VB_H) * H - 22;
       setFacing(1);
     }
     setObjs((o) => [...o, { id: Date.now(), emoji, name, x, y }]);

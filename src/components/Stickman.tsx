@@ -1,5 +1,5 @@
 import type { Pose } from "../reactions";
-import { INK } from "../constants";
+import { INK, BODY_SCALE as S, VB_H, FEET_Y } from "../constants";
 import type { Eyes } from "../types";
 import { DEFAULT_LOOK } from "../characters";
 import type { Look, ShirtId, HairId } from "../characters";
@@ -58,6 +58,19 @@ const SKIRT_D =
 const MINI_D =
   "M20.5 110 C16 120 13 130 10 146 Q20 152 30 146 Q40 152 50 147 Q60 152 70 146 Q80 152 90 146 C87 130 84 120 79.5 110 Z";
 
+/**
+ * Chibi proportions (see constants.ts): the head, hair, face and hats are drawn at full size, while the torso,
+ * arms, clothes and legs are drawn in their ORIGINAL coordinates inside groups that are shrunk by BODY_SCALE.
+ * Everything inside keeps its own local coordinates, so the CSS pivots (arms 33/88, legs 37/116, head 50/82)
+ * and every outfit path still line up. Only the .upper hip pivot is in outer coordinates (see emotes.css).
+ *  - BODY_T shrinks the body about the neck (50, 82), so the shoulders stay tucked under the chin.
+ *  - LEG_T shrinks the legs so the feet land on FEET_Y.
+ *  - sw(n) gives a stroke width that still looks like n after the shrink, so outlines match the head's.
+ */
+const sw = (n: number) => Math.round((n / S) * 100) / 100;
+const BODY_T = `translate(${(50 * (1 - S)).toFixed(2)} ${(82 * (1 - S)).toFixed(2)}) scale(${S})`;
+const LEG_T = `translate(${(50 * (1 - S)).toFixed(2)} ${(FEET_Y - 172 * S).toFixed(2)}) scale(${S})`;
+
 // Chunky blob character: thick outline, big head, tube limbs, white eyes with pupils glancing sideways.
 // Rig layers (see emotes.css): .upper = hips+torso+arms+head, .head = head, .armL/.armR, .legL/.legR.
 // Hair, hats and clothes live inside those layers so they move with the part they are worn on.
@@ -66,7 +79,7 @@ export function Stickman({
   pose,
   color,
   w,
-  h,
+  h: _h, // the height always follows the width now (the viewBox is 100 x VB_H)
   eyes = DEFAULT_EYES,
   look = DEFAULT_LOOK,
   uid = "pet",
@@ -99,7 +112,8 @@ export function Stickman({
   const BODY =
     "M36 80 C26 94 20 116 26 134 Q31 148 50 148 Q69 148 74 134 C80 116 74 94 64 80 Z";
   const down = ["M33 88 Q14 106 17 128", "M67 88 Q86 106 83 128"];
-  const raised = ["M33 88 Q16 80 14 62", "M67 88 Q84 80 86 62"];
+  // Raised arms are aimed so that, after the body shrink, the hands end up beside the (bigger) head instead of behind it.
+  const raised = ["M33 88 Q6 86 -10 62", "M67 88 Q94 86 110 62"];
   const arms = armsDown
     ? down
     : pose === "wave"
@@ -352,7 +366,7 @@ export function Stickman({
       d={BODY}
       fill={ink ? INK : color}
       stroke={ink ? INK : "none"}
-      strokeWidth="10"
+      strokeWidth={sw(10)}
     />
   );
 
@@ -372,7 +386,7 @@ export function Stickman({
           className={i === 0 ? "arm armL" : "arm armR"}
           d={d}
           stroke={INK}
-          strokeWidth="20"
+          strokeWidth={sw(22)}
         />
       ))}
 
@@ -404,7 +418,7 @@ export function Stickman({
           className={i === 0 ? "arm armL" : "arm armR"}
           d={d}
           stroke={color}
-          strokeWidth="11"
+          strokeWidth={sw(12)}
         />
       ))}
 
@@ -419,12 +433,24 @@ export function Stickman({
               strokeDasharray={`${sleeve} 100`}
               strokeLinecap="butt"
               stroke={look.shirtColor}
-              strokeWidth="12"
+              strokeWidth={sw(12.8)}
             />
           ))}
           {/* fills the round top of the arm. It sits on the pivot, so it doesn't move when the arm rotates */}
-          <circle cx="33" cy="88" r="6" fill={look.shirtColor} stroke="none" />
-          <circle cx="67" cy="88" r="6" fill={look.shirtColor} stroke="none" />
+          <circle
+            cx="33"
+            cy="88"
+            r={sw(6.2)}
+            fill={look.shirtColor}
+            stroke="none"
+          />
+          <circle
+            cx="67"
+            cy="88"
+            r={sw(6.2)}
+            fill={look.shirtColor}
+            stroke="none"
+          />
         </>
       )}
     </>
@@ -444,12 +470,12 @@ export function Stickman({
           <path
             d="M36 118 Q33 134 29 149 M50 120 V150 M64 118 Q67 134 71 149"
             fill="none"
-            strokeWidth="2"
+            strokeWidth={sw(2)}
             strokeOpacity=".4"
           />
         </>
       )}
-      <path d={d.replace(" Z", "")} fill="none" strokeWidth="2.5" />
+      <path d={d.replace(" Z", "")} fill="none" strokeWidth={sw(2.5)} />
     </g>
   );
 
@@ -486,10 +512,10 @@ export function Stickman({
               />
             ))}
           {look.shirt === "hoodie" && (
-            <path d="M36 122 Q50 130 64 122" strokeWidth="2.5" />
+            <path d="M36 122 Q50 130 64 122" strokeWidth={sw(2.5)} />
           )}
           {!["tank", "offshoulder", "halter"].includes(look.shirt) && (
-            <path d="M40 80 Q50 90 60 80" strokeWidth="2.5" />
+            <path d="M40 80 Q50 90 60 80" strokeWidth={sw(2.5)} />
           )}
           {look.shirt === "halter" && (
             <path
@@ -498,18 +524,18 @@ export function Stickman({
               strokeWidth="3"
             />
           )}
-          <path d={`M10 ${shirtBottom} H90`} strokeWidth="2.5" />
+          <path d={`M10 ${shirtBottom} H90`} strokeWidth={sw(2.5)} />
           {look.shirt === "sailor" && (
             <>
               <path
                 d="M33 84 L50 104 L67 84 L61 82 L50 94 L39 82 Z"
                 fill="#fff"
-                strokeWidth="2.5"
+                strokeWidth={sw(2.5)}
               />
               <path
                 d="M50 104 L40 98 L40 110 Z M50 104 L60 98 L60 110 Z"
                 fill="#e5566d"
-                strokeWidth="2"
+                strokeWidth={sw(2)}
               />
             </>
           )}
@@ -517,7 +543,7 @@ export function Stickman({
             <path
               d="M34 82 Q50 94 66 82 V88 Q50 100 34 88 Z"
               fill={look.shirtColor}
-              strokeWidth="2.5"
+              strokeWidth={sw(2.5)}
             />
           )}
         </g>
@@ -543,7 +569,7 @@ export function Stickman({
               fill={look.pantsColor}
               stroke="none"
             />
-            <path d="M10 122 H90 M50 138 V150" strokeWidth="3.5" />
+            <path d="M10 122 H90 M50 138 V150" strokeWidth={sw(3.5)} />
           </g>
         </>
       )}
@@ -571,14 +597,14 @@ export function Stickman({
           <path
             d="M36 118 Q33 134 29 149 M50 120 V150 M64 118 Q67 134 71 149"
             fill="none"
-            strokeWidth="2"
+            strokeWidth={sw(2)}
             strokeOpacity=".4"
           />
           {/* outline: sides and hem only, open at the top */}
           <path
             d="M23.5 110 C20 119 8 130 6 149 Q18 155 30 149 Q40 155 50 150 Q60 155 70 149 Q82 155 94 149 C92 130 80 119 76.5 110"
             fill="none"
-            strokeWidth="2.5"
+            strokeWidth={sw(2.5)}
           />
         </g>
       )}
@@ -762,9 +788,9 @@ export function Stickman({
 
   return (
     <svg
-      viewBox="0 0 100 178"
+      viewBox={`0 0 100 ${VB_H}`}
       width={w}
-      height={h}
+      height={(w * VB_H) / 100}
       fill="none"
       stroke={INK}
       strokeWidth="5"
@@ -800,73 +826,82 @@ export function Stickman({
       <ellipse
         className="shadow"
         cx="50"
-        cy="175"
-        rx="20"
+        cy={FEET_Y + 2.5}
+        rx="17"
         ry="2.5"
         fill="rgba(0,0,0,.18)"
         stroke="none"
       />
       <g className="upper">
         <g className="head">{backHair}</g>
-        {bodyOnly(true)}
+        <g transform={BODY_T} strokeWidth={sw(5)}>
+          {bodyOnly(true)}
+        </g>
       </g>
       {/* Each leg keeps its own outline, so when one passes over the other the line shows between them. */}
-      {legs.map(([x, cls]) => (
-        <g key={cls} className={`legGap ${cls === "legL" ? "gapL" : "gapR"}`}>
-          <g className={`leg ${cls}`}>
-            <path d={stump(x)} fill={INK} stroke={INK} strokeWidth="10" />
-            <path d={stump(x)} fill={color} stroke="none" />
-            {look.pants === "jeans" && (
-              <>
-                <path d={stump(x)} fill={look.pantsColor} stroke="none" />
-                <path d={`M${x - 10.5} 163 H${x + 10.5}`} strokeWidth="2.5" />
-              </>
-            )}
-            {look.pants === "shorts" && (
-              <rect
-                x={x - 12}
-                y="100"
-                width="24"
-                height="52"
-                fill={look.pantsColor}
-                stroke="none"
-                clipPath={`url(#${legClip(x)})`}
-              />
-            )}
-            {look.socks && (
-              <>
+      <g transform={LEG_T} strokeWidth={sw(5)}>
+        {legs.map(([x, cls]) => (
+          <g key={cls} className={`legGap ${cls === "legL" ? "gapL" : "gapR"}`}>
+            <g className={`leg ${cls}`}>
+              <path d={stump(x)} fill={INK} stroke={INK} strokeWidth={sw(10)} />
+              <path d={stump(x)} fill={color} stroke="none" />
+              {look.pants === "jeans" && (
+                <>
+                  <path d={stump(x)} fill={look.pantsColor} stroke="none" />
+                  <path
+                    d={`M${x - 10.5} 163 H${x + 10.5}`}
+                    strokeWidth={sw(2.5)}
+                  />
+                </>
+              )}
+              {look.pants === "shorts" && (
                 <rect
                   x={x - 12}
-                  y={look.thighHigh ? 122 : 136}
+                  y="100"
                   width="24"
-                  height="40"
-                  fill={look.socksColor}
+                  height="52"
+                  fill={look.pantsColor}
                   stroke="none"
                   clipPath={`url(#${legClip(x)})`}
                 />
+              )}
+              {look.socks && (
+                <>
+                  <rect
+                    x={x - 12}
+                    y={look.thighHigh ? 122 : 136}
+                    width="24"
+                    height="40"
+                    fill={look.socksColor}
+                    stroke="none"
+                    clipPath={`url(#${legClip(x)})`}
+                  />
+                  <path
+                    d={`M${x - 10.5} 136 H${x + 10.5}`}
+                    stroke="#fff"
+                    strokeOpacity=".7"
+                    strokeWidth={sw(3)}
+                  />
+                </>
+              )}
+              {look.garter && x === 63 && (
                 <path
-                  d={`M${x - 10.5} 136 H${x + 10.5}`}
-                  stroke="#fff"
-                  strokeOpacity=".7"
-                  strokeWidth="3"
+                  d={`M${x - 12} 130 H${x + 12}`}
+                  stroke="#2b2b33"
+                  strokeWidth={sw(4)}
+                  clipPath={`url(#${legClip(x)})`}
                 />
-              </>
-            )}
-            {look.garter && x === 63 && (
-              <path
-                d={`M${x - 12} 130 H${x + 12}`}
-                stroke="#2b2b33"
-                strokeWidth="5"
-                clipPath={`url(#${legClip(x)})`}
-              />
-            )}
+              )}
+            </g>
           </g>
-        </g>
-      ))}
+        ))}
+      </g>
       <g className="upper">
-        {bodyOnly(false)}
-        {torsoClothes}
-        {armsLayer}
+        <g transform={BODY_T} strokeWidth={sw(5)}>
+          {bodyOnly(false)}
+          {torsoClothes}
+          {armsLayer}
+        </g>
         <g className="head">
           <circle cx="50" cy="45" r="40" fill={color} />
           {frontHair && <g className="hair">{frontHair}</g>}

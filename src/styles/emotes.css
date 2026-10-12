@@ -359,7 +359,8 @@
   --mech: cubic-bezier(0.7, 0, 0.3, 1); /* quick mechanical snaps */
 }
 .upper {
-  transform-origin: 50px 140px;
+  /* transform-origin: 50px 140px; */
+  transform-origin: 50px 117px;
 }
 .head {
   transform-origin: 50px 82px;
@@ -412,7 +413,8 @@
   animation: none;
 }
 .pet.emote-bodyroll .upper {
-  transform-origin: 50px 148px;
+  /* transform-origin: 50px 148px; */
+  transform-origin: 50px 122px;
   animation: eRollHips 2.4s var(--sine) infinite;
 }
 .pet.emote-bodyroll .head {
@@ -515,7 +517,8 @@
   animation: none;
 }
 .pet.emote-dip .upper {
-  transform-origin: 50px 148px;
+  /* transform-origin: 50px 148px; */
+  transform-origin: 50px 122px;
   animation: eDipUp 2.4s var(--sine) infinite;
 }
 .pet.emote-dip .head {
@@ -649,7 +652,8 @@
   transform-origin: 50% 100%;
 }
 .pet.emote-litefeet .upper {
-  transform-origin: 50px 148px;
+  /* transform-origin: 50px 148px; */
+  transform-origin: 50px 122px;
   animation: eLiteTwist 0.8s var(--sine) infinite;
 }
 .pet.emote-litefeet .head {
@@ -886,7 +890,8 @@
   animation: none;
 }
 .pet.emote-robot .upper {
-  transform-origin: 50px 148px;
+  /* transform-origin: 50px 148px; */
+  transform-origin: 50px 122px;
   animation: eBotUp 3.2s var(--mech) infinite;
 }
 .pet.emote-robot .head {
@@ -1028,7 +1033,8 @@
   animation: none;
 }
 .pet.emote-krump .upper {
-  transform-origin: 50px 148px;
+  /* transform-origin: 50px 148px; */
+  transform-origin: 50px 122px;
   animation: eKrumpUp 1.6s var(--snap) infinite;
 }
 .pet.emote-krump .head {
@@ -1202,7 +1208,8 @@
   animation: none;
 }
 .pet.emote-dancehall .upper {
-  transform-origin: 50px 148px;
+  /* transform-origin: 50px 148px; */
+  transform-origin: 50px 122px;
   animation:
     eDhX 0.6s var(--sine) infinite alternate,
     eDhY 0.6s var(--sine) -0.3s infinite alternate,
@@ -1306,7 +1313,8 @@
   animation: eTurnFace 0.6s linear 2.2s 2 both;
 }
 .pet.emote-ballet .upper {
-  transform-origin: 50px 148px;
+  /* transform-origin: 50px 148px; */
+  transform-origin: 50px 122px;
   animation: eBalUp 4.8s var(--sine) infinite;
 }
 .pet.emote-ballet .head {
@@ -1447,7 +1455,8 @@
   animation: eLockBob 0.6s var(--sine) infinite alternate;
 }
 .pet.emote-locking .upper {
-  transform-origin: 50px 148px;
+  /* transform-origin: 50px 148px; */
+  transform-origin: 50px 122px;
   animation: eLockUp 2.4s var(--snap) infinite;
 }
 .pet.emote-locking .head {
