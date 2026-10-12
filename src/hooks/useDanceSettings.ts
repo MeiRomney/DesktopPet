@@ -60,3 +60,11 @@ export function useDanceSettings() {
     ids,
   };
 }
+
+export const readDanceSettings = () => ({
+  secs: readSecs(localStorage.getItem("danceSecs")),
+  ids:
+    localStorage.getItem("danceMode") === "custom"
+      ? readMix(localStorage.getItem("danceMix"))
+      : ALL_IDS,
+});

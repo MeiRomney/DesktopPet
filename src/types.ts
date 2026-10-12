@@ -38,6 +38,7 @@ export type BusMsg =
   | { type: "thinking"; on: boolean }
   | { type: "runOut" }
   | { type: "runIn" }
+  | { type: "shortcut"; action: "emote" | "dance" | "toys" | "mute" }
   | { type: "petVisible"; on: boolean };
 
 declare global {

@@ -24,6 +24,7 @@ import {
   SKINS,
 } from "../characters";
 import { DEFAULT_EYES } from "../hooks/useAppearance";
+import { SHORTCUTS } from "../shortcuts";
 
 type Zone = ReturnType<typeof useZone>;
 type Dance = ReturnType<typeof useDanceSettings>;
@@ -39,6 +40,9 @@ export type SystemApi = {
   petVisible: boolean;
   togglePet(): void;
   minimizePanel(): void;
+  muted: boolean;
+  toggleMute(): void;
+  run(action: "emote" | "dance" | "toys"): void;
 };
 
 type Props = {
@@ -779,34 +783,64 @@ const Keys = ({ keys }: { keys: string[] }) => (
   </span>
 );
 function SettingsTab({ s }: { s: SystemApi }) {
+  const buttons: Record<string, ReactNode> = {
+    pet: (
+      <button className="pill" onClick={s.togglePet}>
+        {s.petVisible ? "Hide pet" : "Show pet"}
+      </button>
+    ),
+    panel: (
+      <button className="pill" onClick={s.minimizePanel}>
+        Minimize
+      </button>
+    ),
+    emote: (
+      <button className="pill" onClick={() => s.run("emote")}>
+        Try
+      </button>
+    ),
+    dance: (
+      <button className="pill" onClick={() => s.run("dance")}>
+        Try
+      </button>
+    ),
+    toys: (
+      <button className="pill" onClick={() => s.run("toys")}>
+        Try
+      </button>
+    ),
+    mute: (
+      <button className="pill" onClick={s.toggleMute}>
+        {s.muted ? "Unmute" : "Mute"}
+      </button>
+    ),
+  };
   return (
-    <Section
-      title="Shortcuts"
-      hint="These work from anywhere, even when the control panel is hidden."
-    >
-      <div className="cpKeyRow">
-        <div>
-          <b>Control panel</b>
-          <small>Opens it, or minimizes it when it is in front.</small>
-        </div>
-        <Keys keys={["Ctrl", "Alt", "O"]} />
-        <button className="pill" onClick={s.minimizePanel}>
-          Minimize
-        </button>
-      </div>
-      <div className="cpKeyRow">
-        <div>
-          <b>Pet</b>
-          <small>
-            Hiding makes it run off screen. Showing makes it run back in.
-          </small>
-        </div>
-        <Keys keys={["Ctrl", "Alt", "P"]} />
-        <button className="pill" onClick={s.togglePet}>
-          {s.petVisible ? "Hide pet" : "Show pet"}
-        </button>
-      </div>
-    </Section>
+    <>
+      <Section title="Speech bubbles">
+        <Toggle
+          on={s.muted}
+          onChange={s.toggleMute}
+          label="Mute"
+          desc="The pet stays quiet: no speech bubbles at all."
+        />
+      </Section>
+      <Section
+        title="Shortcuts"
+        hint="These work from anywhere, even when the control panel is hidden."
+      >
+        {SHORTCUTS.map((sc) => (
+          <div className="cpKeyRow" key={sc.id}>
+            <div>
+              <b>{sc.label}</b>
+              <small>{sc.desc}</small>
+            </div>
+            <Keys keys={[...sc.keys]} />
+            {buttons[sc.id]}
+          </div>
+        ))}
+      </Section>
+    </>
   );
 }
 

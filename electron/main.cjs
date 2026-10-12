@@ -254,6 +254,11 @@ const toggleControl = () => {
   else openControl();
 };
 
+const sendPet = (action) => {
+  if (win && !win.isDestroyed() && !petHidden && !leaving)
+    win.webContents.send("bus", { type: "shortcut", action });
+};
+
 app.whenReady().then(() => {
   createWindow();
   createControlWindow();
@@ -278,6 +283,16 @@ app.whenReady().then(() => {
   tray.on("click", togglePet);
   globalShortcut.register("Control+Alt+P", togglePet);
   globalShortcut.register("Control+Alt+O", toggleControl);
+  globalShortcut.register("Control+Alt+E", () => sendPet("emote"));
+  globalShortcut.register("Control+Alt+D", () => sendPet("dance"));
+  globalShortcut.register("Control+Alt+T", () => sendPet("toys"));
+  globalShortcut.register(
+    "Control+Alt+M",
+    () =>
+      win &&
+      !win.isDestroyed() &&
+      win.webContents.send("bus", { type: "shortcut", action: "mute" }),
+  );
 });
 
 ipcMain.on(

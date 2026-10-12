@@ -3,6 +3,7 @@ import type { Pose } from "../reactions";
 import { AI_CHANCE } from "../constants";
 import type { PetCore } from "./usePetCore";
 import { LOOK_RANGES, useLookSettings } from "./useLookSettings";
+import { useMute } from "./useMute";
 
 /** Everything the pet says: bubbles, scripted lines, and the AI (chat replies, random reactions, screen glances). */
 export function useSpeech(c: PetCore) {
@@ -17,8 +18,15 @@ export function useSpeech(c: PetCore) {
   const userTimer = useRef<number>();
   const lookOn = useRef(look);
   lookOn.current = look;
+  const { muted, toggleMute } = useMute();
+  const mutedRef = useRef(muted);
+  mutedRef.current = muted;
+  useEffect(() => {
+    if (muted) setSays("");
+  }, [muted]);
 
   const showBubble = (t: string, ms = 7000) => {
+    if (mutedRef.current) return;
     setSays(t);
     window.clearTimeout(bubbleTimer.current);
     bubbleTimer.current = window.setTimeout(() => setSays(""), ms);
@@ -95,7 +103,8 @@ export function useSpeech(c: PetCore) {
             lookOn.current &&
             !S.current.open &&
             !drag.current &&
-            !objDrag.current
+            !objDrag.current &&
+            !mutedRef.current
           )
             lookAround(false);
           loop();
@@ -121,7 +130,8 @@ export function useSpeech(c: PetCore) {
             !objDrag.current &&
             !hovering.current &&
             !busy.current &&
-            !S.current.open
+            !S.current.open &&
+            !mutedRef.current
           )
             say(
               "You are idle and nobody is talking to you. Say something spontaneous: a thought, a joke, or something you remember.",
@@ -143,6 +153,8 @@ export function useSpeech(c: PetCore) {
     look,
     toggleLook,
     lookEvery,
+    muted,
+    toggleMute,
     setLookEvery,
     showBubble,
     showUserBubble,

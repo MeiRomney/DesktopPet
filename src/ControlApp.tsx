@@ -6,6 +6,7 @@ import { useLookSettings } from "./hooks/useLookSettings";
 import { useQuickToys } from "./hooks/useQuickToys";
 import { useSize } from "./hooks/useSize";
 import { useZone } from "./hooks/useZone";
+import { useMute } from "./hooks/useMute";
 
 /** The control panel window: a normal desktop window. It never moves the pet itself. Settings go through
  *  localStorage, actions through window.api.bus. Closing this window quits the app (see electron/main.cjs). */
@@ -19,6 +20,7 @@ export default function ControlApp() {
   const [thinking, setThinking] = useState(false);
   const [danceLeft, setDanceLeft] = useState<number | null>(null); // seconds left; null = no dance-off running
   const [petVisible, setPetVisible] = useState(true);
+  const mute = useMute();
 
   useEffect(() => {
     document.title = "Jubilibi: Control panel";
@@ -50,6 +52,9 @@ export default function ControlApp() {
           window.api.togglePet();
         },
         minimizePanel: () => window.api.toggleControl(),
+        muted: mute.muted,
+        toggleMute: mute.toggleMute,
+        run: (action) => window.api.bus.send({ type: "shortcut", action }),
       }}
       onEmote={(id) => window.api.bus.send({ type: "emote", id })}
       onDanceOff={(seconds, ids) => {

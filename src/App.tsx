@@ -17,6 +17,8 @@ import { useZone } from "./hooks/useZone";
 import type { BusMsg } from "./types";
 import { clamp } from "./utils";
 import { EMOTES, DANCE_LINES } from "./emotes";
+import { ITEMS } from "./reactions";
+import { readDanceSettings } from "./hooks/useDanceSettings";
 
 const PANEL_W = 236; // width of the small pet menu
 
@@ -65,6 +67,7 @@ export default function App() {
     else if (m.type === "runIn") runIn();
     else if (m.type === "danceOff") startDanceOff(m.seconds, m.ids);
     else if (m.type === "danceStop") stopDance();
+    else if (m.type === "shortcut") runShortcut(m.action);
     else if (m.type === "drawZone") {
       core.hovering.current = false;
       setOpen(false);
@@ -235,6 +238,25 @@ export default function App() {
   const openPanel = () => {
     closeMenu();
     window.api.openControl();
+  };
+
+  const runShortcut = (a: "emote" | "dance" | "toys" | "mute") => {
+    if (a === "mute") speech.toggleMute();
+    else if (a === "emote")
+      playEmote(EMOTES[Math.floor(Math.random() * EMOTES.length)].id);
+    else if (a === "dance") {
+      if (dancing.current) stopDance();
+      else {
+        const d = readDanceSettings();
+        startDanceOff(
+          d.secs,
+          d.ids.length >= 2 ? d.ids : EMOTES.map((e) => e.id),
+        );
+      }
+    } else {
+      const [e, n] = ITEMS[Math.floor(Math.random() * ITEMS.length)];
+      act.spawn(e, n);
+    }
   };
 
   const send = () => {
