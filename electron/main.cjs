@@ -174,7 +174,7 @@ function createControlWindow() {
     minWidth: 560,
     minHeight: 380,
     title: "Jubilibi: Control panel",
-    icon: path.join(__dirname, "../assets/logo.png"),
+    icon: path.join(__dirname, "../assets/Jubilibi.png"),
     backgroundColor: "#ffffff",
     autoHideMenuBar: true,
     webPreferences: { preload: path.join(__dirname, "preload.cjs") },
@@ -270,7 +270,7 @@ app.whenReady().then(() => {
     else if (autoHidden) showPet();
   });
   tray = new Tray(
-    nativeImage.createFromPath(path.join(__dirname, "../assets/logo.png")),
+    nativeImage.createFromPath(path.join(__dirname, "../assets/Jubilibi.png")),
   );
   tray.setToolTip("Jubilibi");
   tray.setContextMenu(

@@ -22,6 +22,7 @@ import {
   HATS,
   PANTS,
   SHIRTS,
+  SHOES,
   SKINS,
 } from "../characters";
 import { DEFAULT_EYES } from "../hooks/useAppearance";
@@ -789,6 +790,30 @@ function OutfitTab({ a }: { a: Appearance }) {
           />
         )}
       </Section>
+      {look.shirt !== "none" && (
+        <>
+          <Section
+            title="Accent color"
+            hint="Piping, tie, ribbon, stripes, buttons and cuffs."
+          >
+            <ColorPicker
+              colors={CLOTH_COLORS}
+              value={look.trimColor}
+              onChange={(c) => setLook({ trimColor: c })}
+            />
+          </Section>
+          <Section
+            title="Under layer"
+            hint="Vest, shirt or scarf under an open jacket, blazer, cardigan or sailor top."
+          >
+            <ColorPicker
+              colors={CLOTH_COLORS}
+              value={look.innerColor}
+              onChange={(c) => setLook({ innerColor: c })}
+            />
+          </Section>
+        </>
+      )}
       <Section title="Pants">
         <Options
           value={look.pants}
@@ -800,6 +825,20 @@ function OutfitTab({ a }: { a: Appearance }) {
             colors={CLOTH_COLORS}
             value={look.pantsColor}
             onChange={(c) => setLook({ pantsColor: c })}
+          />
+        )}
+      </Section>
+      <Section title="Shoes">
+        <Options
+          value={look.shoes}
+          options={SHOES}
+          onChange={(v) => setLook({ shoes: v })}
+        />
+        {look.shoes !== "none" && (
+          <ColorPicker
+            colors={CLOTH_COLORS}
+            value={look.shoesColor}
+            onChange={(c) => setLook({ shoesColor: c })}
           />
         )}
       </Section>
