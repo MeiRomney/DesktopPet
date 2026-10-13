@@ -662,6 +662,7 @@ export function Stickman({
       <g className="upper">
         <g transform={BODY_T} strokeWidth={sw(5)}>
           {bodyOnly(false)}
+          {/* {armsLayer} */}
           {torsoClothes}
           {armsLayer}
         </g>
