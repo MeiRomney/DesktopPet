@@ -4,6 +4,7 @@ import { AI_CHANCE } from "../constants";
 import type { PetCore } from "./usePetCore";
 import { LOOK_RANGES, useLookSettings } from "./useLookSettings";
 import { useMute } from "./useMute";
+import { offlineReply } from "../reactions";
 
 /** Everything the pet says: bubbles, scripted lines, and the AI (chat replies, random reactions, screen glances). */
 export function useSpeech(c: PetCore) {
@@ -58,10 +59,19 @@ export function useSpeech(c: PetCore) {
       onFail();
       return;
     }
-    setPose(r.ok ? r.pose! : "sad");
-    showBubble(
-      r.ok ? r.says! : `No brain found. Is Ollama running? (${r.error})`,
-    );
+    if (!r.ok) {
+      if (r.code === "off") {
+        const o = offlineReply(event);
+        setPose(o.pose);
+        showBubble(o.says);
+      } else {
+        setPose("sad");
+        showBubble(r.error || "My brain is not working. Check the AI tab.");
+      }
+      return;
+    }
+    setPose(r.pose!);
+    showBubble(r.says!);
   };
 
   // AI use #2: about 1 in 4 object reactions is answered by the AI instead of the scripted line.
@@ -89,7 +99,7 @@ export function useSpeech(c: PetCore) {
       showBubble(r.says!, 9000);
     } else if (manual) {
       setPose("sad");
-      showBubble(`I could not look. Is the vision model pulled? (${r.error})`);
+      showBubble(r.error || "I could not look.");
     }
   };
 

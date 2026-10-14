@@ -7,8 +7,36 @@ export type Obj = {
   x: number;
   y: number;
 };
-export type Reply = { ok: boolean; pose?: Pose; says?: string; error?: string };
+export type Reply = {
+  ok: boolean;
+  pose?: Pose;
+  says?: string;
+  error?: string;
+  code?: string;
+};
 export type Rect = { x: number; y: number; w: number; h: number };
+
+export type AiMode = "off" | "ollama" | "key";
+export type AiProvider = "anthropic" | "openai";
+export type AiSettings = {
+  mode: AiMode;
+  provider: AiProvider;
+  model: string;
+  hasKey: boolean;
+};
+export type OllamaState = "missing" | "stopped" | "running";
+export type AiStatus = {
+  ollama: { state: OllamaState; hasChat: boolean; hasVision: boolean };
+  models: { chat: string; vision: string };
+  cameraReady: boolean;
+  cameraReason: string;
+};
+export type AiPullProgress = {
+  model: string;
+  status: string;
+  completed: number;
+  total: number;
+};
 
 // Where the pet roams: anywhere, inside a drawn box, or on the edges (the taskbar, the top of the focused app).
 export type RoamMode = "free" | "box" | "edges" | "stay";
@@ -58,6 +86,23 @@ declare global {
       openControl(): void;
       bus: { send(m: BusMsg): void; on(cb: (m: BusMsg) => void): () => void };
       onActiveWindow(cb: (w: WinRect | null) => void): () => void;
+      ai: {
+        getSettings(): Promise<AiSettings>;
+        update(
+          p: Partial<{
+            mode: AiMode;
+            provider: AiProvider;
+            model: string;
+            apiKey: string;
+          }>,
+        ): Promise<AiSettings>;
+        status(): Promise<AiStatus>;
+        openDownload(): void;
+        startOllama(): Promise<void>;
+        pullModels(): Promise<{ ok: boolean; error?: string }>;
+        test(): Promise<{ ok: boolean; says?: string; error?: string }>;
+        onProgress(cb: (p: AiPullProgress) => void): () => void;
+      };
     };
   }
 }

@@ -328,6 +328,34 @@
   background: var(--lilac-soft);
   box-shadow: 1px 1px 0 var(--ink);
 }
+.cpLock {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.cpLock:disabled {
+  opacity: 0.45;
+}
+.cpInput {
+  font: inherit;
+  font-size: 13px;
+  padding: 7px 12px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+.cpInput:focus {
+  box-shadow: 0 0 0 3px var(--lilac);
+}
 
 /* Pet menu (the small card when you click the pet) */
 .toys.three {

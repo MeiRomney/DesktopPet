@@ -12,10 +12,8 @@ const {
 const path = require("path");
 const fs = require("fs");
 const { createTracker } = require("./windows.cjs");
+const ai = require("./ai.cjs");
 
-const MODEL = process.env.PET_MODEL || "llama3.2:3b"; // change with PET_MODEL
-const VISION_MODEL = process.env.PET_VISION_MODEL || "gemma3:4b"; // must support images
-const OLLAMA = "http://127.0.0.1:11434/api/chat";
 const POSES = ["neutral", "happy", "scared", "angry", "sad", "shocked"];
 let win, ctrl, tray, tracker;
 let autoHidden = false; // hidden by us because a fullscreen app is in front (not by you)
@@ -29,11 +27,13 @@ const REACT_SCHEMA = {
     note: { type: "string" },
   },
   required: ["pose", "says", "note"],
+  additionalProperties: false,
 };
 const SUMMARY_SCHEMA = {
   type: "object",
   properties: { summary: { type: "string" } },
   required: ["summary"],
+  additionalProperties: false,
 };
 
 // ---- memory (local JSON file) ----
@@ -47,36 +47,16 @@ const loadMem = () => {
 };
 const saveMem = (m) => fs.writeFileSync(memFile(), JSON.stringify(m, null, 2));
 
-// ---- Ollama ----
-async function chat(system, user, schema, model = MODEL, images) {
-  const res = await fetch(OLLAMA, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model,
-      stream: false,
-      format: schema,
-      options: { temperature: 0.9 },
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user, ...(images && { images }) },
-      ],
-    }),
-  });
-  if (!res.ok)
-    throw new Error(`Ollama returned ${res.status} (is the model pulled?)`);
-  return JSON.parse((await res.json()).message.content);
-}
-
 async function compact(mem) {
   if (mem.events.length <= 24) return;
-  const old = mem.events.splice(0, mem.events.length - 12);
-  const s = await chat(
+  const old = mem.events.slice(0, mem.events.length - 12);
+  const s = await ai.chat(
     "Condense these memories into a first-person summary of max 60 words. Keep grudges, likes and fears.",
     `Old summary: ${mem.summary}\nEvents:\n${old.join("\n")}`,
     SUMMARY_SCHEMA,
   );
   mem.summary = s.summary;
+  mem.events.splice(0, old.length);
 }
 
 // Scripted events are logged here without any AI call, so the pet still remembers them when you chat.
@@ -93,6 +73,9 @@ const LOOK_PERSONA =
   ` You can see a screenshot of the user's desktop. Ignore the small stickman, that is you. Make ONE playful remark about what the user seems to be doing (the app, the activity, the colors). Never read out or repeat private text such as messages, emails, names, passwords or numbers.`;
 ipcMain.handle("look", async () => {
   try {
+    const st = await ai.status();
+    if (!st.cameraReady)
+      return { ok: false, code: "camera", error: st.cameraReason };
     const display = screen.getPrimaryDisplay();
     const { width, height } = display.size;
     const sources = await desktopCapturer.getSources({
@@ -105,19 +88,22 @@ ipcMain.handle("look", async () => {
     const src =
       sources.find((x) => x.display_id === String(display.id)) || sources[0];
     const img = src.thumbnail.toJPEG(70).toString("base64");
-    const r = await chat(
+    const r = await ai.chat(
       LOOK_PERSONA,
       "Here is a screenshot of the desktop. Make one short remark.",
       REACT_SCHEMA,
-      VISION_MODEL,
-      [img],
+      { vision: true, images: [img] },
     );
     const mem = loadMem();
     mem.events.push(`I glanced at the desktop: ${r.note}`);
     saveMem(mem);
     return { ok: true, pose: r.pose, says: r.says };
   } catch (err) {
-    return { ok: false, error: String(err.message || err) };
+    return {
+      ok: false,
+      code: err.code || "error",
+      error: ai.describeError(err),
+    };
   }
 });
 
@@ -130,13 +116,21 @@ ipcMain.handle("react", async (_e, event) => {
       .join("\n") || "- none"
   }\n\nNEW EVENT: ${event}`;
   try {
-    const r = await chat(PERSONA, prompt, REACT_SCHEMA);
+    const r = await ai.chat(PERSONA, prompt, REACT_SCHEMA);
     mem.events.push(`${event} -> I felt ${r.pose}: ${r.note}`);
-    await compact(mem);
+    try {
+      await compact(mem);
+    } catch {
+      /* keep going without a summary */
+    }
     saveMem(mem);
     return { ok: true, pose: r.pose, says: r.says };
   } catch (err) {
-    return { ok: false, error: String(err.message || err) };
+    return {
+      ok: false,
+      code: err.code || "error",
+      error: ai.describeError(err),
+    };
   }
 });
 
@@ -339,6 +333,26 @@ ipcMain.on("track-windows", (_e, on) => {
   else {
     tracker.stop();
     if (autoHidden) showPet();
+  }
+});
+ipcMain.handle("ai:get-settings", () => ai.getSettings());
+ipcMain.handle("ai:update", (_e, p) => ai.update(p || {}));
+ipcMain.handle("ai:status", () => ai.status());
+ipcMain.on("ai:open-download", () => ai.openDownload());
+ipcMain.handle("ai:start-ollama", () => ai.startOllama());
+ipcMain.handle("ai:pull-models", async (e) => {
+  try {
+    await ai.pullMissing((p) => e.sender.send("ai-progress", p));
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: String(err.message || err) };
+  }
+});
+ipcMain.handle("ai:test", async () => {
+  try {
+    return { ok: true, says: await ai.test() };
+  } catch (err) {
+    return { ok: false, error: ai.describeError(err) };
   }
 });
 app.on("will-quit", () => {

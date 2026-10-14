@@ -27,6 +27,8 @@ import {
 } from "../characters";
 import { DEFAULT_EYES } from "../hooks/useAppearance";
 import { SHORTCUTS } from "../shortcuts";
+import { AiTab } from "./AiTab";
+import type { AiApi } from "../hooks/useAi";
 
 type Zone = ReturnType<typeof useZone>;
 type Dance = ReturnType<typeof useDanceSettings>;
@@ -37,6 +39,8 @@ export type CameraApi = {
   setLookEvery(v: LookEvery): void;
   thinking: boolean;
   lookNow(): void;
+  ready: boolean;
+  reason: string;
 };
 export type SystemApi = {
   petVisible: boolean;
@@ -62,6 +66,7 @@ type Props = {
   quick: ReturnType<typeof useQuickToys>;
   onSpawn(emoji: string, name: string): void;
   onStartZone(): void;
+  ai: AiApi;
 };
 
 // ---- Small building blocks used by every tab ----
@@ -314,44 +319,53 @@ const EVERY_TEXT: Record<LookEvery, string> = {
 function CameraTab({ s }: { s: CameraApi }) {
   return (
     <>
-      <Section
-        title="Screen glance"
-        hint="The pet takes a look at a screenshot of your primary monitor and comments on it. The screenshot only goes to your local Ollama and is never saved."
-      >
-        <Toggle
-          on={s.look}
-          onChange={s.toggleLook}
-          label="Auto-look"
-          desc={
-            s.look
-              ? `On: it glances ${EVERY_TEXT[s.lookEvery]}.`
-              : "Off: it never looks unless you ask."
-          }
-        />
-        <div className="cpRow">
-          <span>How often</span>
-          <Choice
-            value={s.lookEvery}
-            options={EVERY}
-            onChange={s.setLookEvery}
-          />
-        </div>
-        <p className="cpHint">
-          A new frequency applies after the current wait finishes.
-        </p>
-      </Section>
-      <Section title="Right now">
-        <button
-          className="pill"
-          disabled={s.thinking}
-          onClick={() => s.lookNow()}
+      {!s.ready && (
+        <Section title="Camera is locked" hint={s.reason}>
+          <p className="cpHint">
+            Set up local AI in the AI tab and this unlocks by itself.
+          </p>
+        </Section>
+      )}
+      <fieldset className="cpLock" disabled={!s.ready}>
+        <Section
+          title="Screen glance"
+          hint="The pet takes a look at a screenshot of your primary monitor and comments on it. The screenshot only goes to your local Ollama and is never saved."
         >
-          {s.thinking ? "Looking..." : "📸 Look now"}
-        </button>
-        <p className="cpHint">
-          Needs the vision model: <code>ollama pull gemma3:4b</code>
-        </p>
-      </Section>
+          <Toggle
+            on={s.look}
+            onChange={s.toggleLook}
+            label="Auto-look"
+            desc={
+              s.look
+                ? `On: it glances ${EVERY_TEXT[s.lookEvery]}.`
+                : "Off: it never looks unless you ask."
+            }
+          />
+          <div className="cpRow">
+            <span>How often</span>
+            <Choice
+              value={s.lookEvery}
+              options={EVERY}
+              onChange={s.setLookEvery}
+            />
+          </div>
+          <p className="cpHint">
+            A new frequency applies after the current wait finishes.
+          </p>
+        </Section>
+        <Section title="Right now">
+          <button
+            className="pill"
+            disabled={s.thinking}
+            onClick={() => s.lookNow()}
+          >
+            {s.thinking ? "Looking..." : "📸 Look now"}
+          </button>
+          <p className="cpHint">
+            Needs the vision model: <code>ollama pull gemma3:4b</code>
+          </p>
+        </Section>
+      </fieldset>
     </>
   );
 }
@@ -1020,6 +1034,18 @@ const TABS: (Tab | "divider")[] = [
     ),
   },
   {
+    id: "ai",
+    icon: "🧠",
+    label: "AI",
+    render: (p) => <AiTab ai={p.ai} />,
+  },
+  {
+    id: "camera",
+    icon: "📸",
+    label: "Camera",
+    render: (p) => <CameraTab s={p.camera} />,
+  },
+  {
     id: "settings",
     icon: "⚙️",
     label: "Settings",
@@ -1055,12 +1081,6 @@ const TABS: (Tab | "divider")[] = [
     render: () => (
       <SoonTab title="Alarms" text="Wake-up calls and scheduled alerts." />
     ),
-  },
-  {
-    id: "camera",
-    icon: "📸",
-    label: "Camera",
-    render: (p) => <CameraTab s={p.camera} />,
   },
 ];
 

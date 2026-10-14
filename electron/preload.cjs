@@ -26,4 +26,18 @@ contextBridge.exposeInMainWorld("api", {
     ipcRenderer.on("active-window", h);
     return () => ipcRenderer.removeListener("active-window", h);
   },
+  ai: {
+    getSettings: () => ipcRenderer.invoke("ai:get-settings"),
+    update: (p) => ipcRenderer.invoke("ai:update", p),
+    status: () => ipcRenderer.invoke("ai:status"),
+    openDownload: () => ipcRenderer.send("ai:open-download"),
+    startOllama: () => ipcRenderer.invoke("ai:start-ollama"),
+    pullModels: () => ipcRenderer.invoke("ai:pull-models"),
+    test: () => ipcRenderer.invoke("ai:test"),
+    onProgress: (cb) => {
+      const h = (_e, p) => cb(p);
+      ipcRenderer.on("ai-progress", h);
+      return () => ipcRenderer.removeListener("ai-progress", h);
+    },
+  },
 });
