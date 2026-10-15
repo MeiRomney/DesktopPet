@@ -7,7 +7,7 @@ const ALL_IDS: string[] = EMOTES.map((e) => e.id);
 
 const readSecs = (v: string | null) => {
   const n = Number(v);
-  return n >= 10 && n <= 300 ? n : DEFAULT_DANCE_SECS;
+  return n >= 10 && n <= 600 ? n : DEFAULT_DANCE_SECS;
 };
 const readMix = (raw: string | null): string[] => {
   try {

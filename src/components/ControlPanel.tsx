@@ -415,7 +415,7 @@ function EmotesTab({
           <Slider
             label="Duration"
             min={10}
-            max={300}
+            max={600}
             step={10}
             value={dance.secs}
             onChange={dance.setSecs}
