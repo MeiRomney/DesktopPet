@@ -209,7 +209,7 @@ const A = { size: 1.15, pupil: 1.5, gap: 24 };
 const M = { size: 1.05, pupil: 1.45, gap: 24 }; // boys: slightly smaller, sharper eyes
 
 const ALL: Character[] = [
-  { id: "stick", name: "Stick", color: "#43474f", eyes: {}, look: {} },
+  { id: "stick", name: "Chibi", color: "#43474f", eyes: {}, look: {} },
 
   // ---------------------------------------------------------------- first batch
   {

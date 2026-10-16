@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useCallback, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { COLORS } from "../constants";
 import { ITEMS } from "../reactions";
@@ -29,6 +29,7 @@ import { DEFAULT_EYES } from "../hooks/useAppearance";
 import { SHORTCUTS } from "../shortcuts";
 import { AiTab } from "./AiTab";
 import type { AiApi } from "../hooks/useAi";
+import { Character } from "../characters";
 
 type Zone = ReturnType<typeof useZone>;
 type Dance = ReturnType<typeof useDanceSettings>;
@@ -684,7 +685,41 @@ function Options<T extends string>({
   );
 }
 
+const CharacterCard = memo(function CharacterCard({
+  c,
+  on,
+  onPick,
+}: {
+  c: Character;
+  on: boolean;
+  onPick(id: string): void;
+}) {
+  return (
+    <button
+      className={`cpChar${on ? " on" : ""}`}
+      aria-pressed={on}
+      onClick={() => onPick(c.id)}
+    >
+      <Stickman
+        pose="neutral"
+        color={c.color}
+        eyes={{ ...DEFAULT_EYES, ...c.eyes, track: false }}
+        look={{ ...DEFAULT_LOOK, ...c.look }}
+        w={36}
+        h={64}
+        uid={`char-${c.id}`}
+      />
+      <span>{c.name}</span>
+    </button>
+  );
+});
+
 function CharactersTab({ a }: { a: Appearance }) {
+  // applyCharacter is recreated every render; keep a stable wrapper so memo works
+  const apply = useRef(a.applyCharacter);
+  apply.current = a.applyCharacter;
+  const onPick = useCallback((id: string) => apply.current(id), []);
+
   return (
     <>
       <Section
@@ -693,23 +728,29 @@ function CharactersTab({ a }: { a: Appearance }) {
       >
         <div className="cpChars">
           {CHARACTERS.map((c) => (
-            <button
+            // <button
+            //   key={c.id}
+            //   className={`cpChar${a.character === c.id ? " on" : ""}`}
+            //   aria-pressed={a.character === c.id}
+            //   onClick={() => a.applyCharacter(c.id)}
+            // >
+            //   <Stickman
+            //     pose="neutral"
+            //     color={c.color}
+            //     eyes={{ ...DEFAULT_EYES, ...c.eyes, track: false }}
+            //     look={{ ...DEFAULT_LOOK, ...c.look }}
+            //     w={36}
+            //     h={64}
+            //     uid={`char-${c.id}`}
+            //   />
+            //   <span>{c.name}</span>
+            // </button>
+            <CharacterCard
               key={c.id}
-              className={`cpChar${a.character === c.id ? " on" : ""}`}
-              aria-pressed={a.character === c.id}
-              onClick={() => a.applyCharacter(c.id)}
-            >
-              <Stickman
-                pose="neutral"
-                color={c.color}
-                eyes={{ ...DEFAULT_EYES, ...c.eyes, track: false }}
-                look={{ ...DEFAULT_LOOK, ...c.look }}
-                w={36}
-                h={64}
-                uid={`char-${c.id}`}
-              />
-              <span>{c.name}</span>
-            </button>
+              c={c}
+              on={a.character === c.id}
+              onPick={onPick}
+            />
           ))}
         </div>
       </Section>

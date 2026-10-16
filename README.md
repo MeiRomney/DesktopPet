@@ -1,6 +1,6 @@
 # Jubilibi: an AI desktop pet (Windows)
 
-A stickman that lives on your desktop, reacts in real time through a local Ollama model, and remembers what you did to it.
+A Chibi character that lives on your desktop, reacts in real time through a local Ollama model, and remembers what you did to it.
 
 ## Setup
 
