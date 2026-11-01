@@ -165,8 +165,8 @@ function createControlWindow() {
   ctrl = new BrowserWindow({
     width: 760,
     height: 520,
-    minWidth: 560,
-    minHeight: 380,
+    minWidth: 320,
+    minHeight: 240,
     title: "Jubilibi: Control panel",
     icon: path.join(__dirname, "../assets/Jubilibi.png"),
     backgroundColor: "#ffffff",

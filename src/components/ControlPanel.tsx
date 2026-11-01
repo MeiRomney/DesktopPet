@@ -1144,6 +1144,8 @@ export function ControlPanel(props: Props) {
               key={t.id}
               className={`cpTab${t.id === current.id ? " on" : ""}`}
               aria-current={t.id === current.id}
+              aria-label={t.label}
+              title={t.label}
               onClick={() => setTab(t.id)}
             >
               <span>{t.icon}</span>

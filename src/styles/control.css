@@ -396,3 +396,68 @@ html.ctrlWin,
   outline: 2px solid var(--lilac);
   outline-offset: 2px;
 }
+
+/* ---- Small window support ---- */
+
+/* Content that can overflow at narrow widths */
+.cpSlider {
+  grid-template-columns: minmax(60px, 86px) 1fr 46px;
+}
+.cpRow {
+  flex-wrap: wrap;
+}
+.cpRow .seg {
+  min-width: 0;
+  flex: 1 1 150px;
+}
+.cpKeyRow {
+  grid-template-columns: 1fr auto;
+}
+.cpKeyRow > :nth-child(3) {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+
+/* Grids adapt to the available width instead of fixed column counts */
+.cpChars {
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+}
+.cpToys {
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+}
+
+/* Narrow window: icon-only sidebar */
+@media (max-width: 480px) {
+  .cpNav {
+    width: 52px;
+    padding: 6px 4px;
+  }
+  .cpTab {
+    justify-content: center;
+    padding: 7px 0;
+    font-size: 0; /* hides the label text, keeps the icon */
+  }
+  .cpTab span {
+    font-size: 16px;
+    width: auto;
+  }
+  .cpDivider {
+    font-size: 0;
+    margin: 6px 4px;
+    border-top: 2px solid var(--ink);
+    opacity: 0.2;
+  }
+  .cpContent {
+    padding: 10px;
+  }
+}
+
+/* Short window: tighter spacing so more fits before scrolling */
+@media (max-height: 320px) {
+  .cpContent {
+    gap: 10px;
+  }
+  .cpPreview {
+    padding: 4px 14px;
+  }
+}
