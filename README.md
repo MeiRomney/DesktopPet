@@ -2,6 +2,15 @@
 
 A Chibi character that lives on your desktop, reacts in real time through a local Ollama model, and remembers what you did to it.
 
+---
+
+<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/8249ac6a-dcd6-43bb-a1e6-9217165690ee" />
+
+<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/8426019c-3722-48fd-acfb-74b750fd6c44" />
+
+
+---
+
 ## Setup
 
 1. Install Node.js 20+ (https://nodejs.org) and Ollama for Windows (https://ollama.com/download).
