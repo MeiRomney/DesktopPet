@@ -22,6 +22,9 @@ import { readDanceSettings } from "./hooks/useDanceSettings";
 import { TOY_ACTS } from "./toyActs";
 import type { ToyActDef } from "./toyActs";
 import { ToyActProps } from "./components/ToyActProps";
+import { PomodoroBadge } from "./components/PomodoroBadge";
+import { usePomodoro } from "./hooks/usePomodoro";
+import { readPomoSettings } from "./hooks/usePomodoroSettings";
 
 const PANEL_W = 236; // width of the small pet menu
 
@@ -77,6 +80,7 @@ export default function App() {
     else if (m.type === "danceOff") startDanceOff(m.seconds, m.ids);
     else if (m.type === "danceStop") stopDance();
     else if (m.type === "shortcut") runShortcut(m.action);
+    else if (m.type === "pomo") pomo.command(m.action);
     else if (m.type === "drawZone") {
       core.hovering.current = false;
       setOpen(false);
@@ -252,6 +256,41 @@ export default function App() {
     next();
   };
 
+  const pomo = usePomodoro({
+    onChange: (s) => {
+      core.quiet.current =
+        s.running && s.phase === "focus" && readPomoSettings().quiet;
+    },
+    onStart: (phase, fresh) =>
+      speech.showBubble(
+        phase === "focus"
+          ? fresh
+            ? "Focus time! I'll keep quiet."
+            : "Back to it."
+          : "Break time. Stretch!",
+        3500,
+      ),
+    onReset: () => speech.showBubble("Timer reset.", 2000),
+    onPhaseEnd: (from, to, round) => {
+      if (from === "focus") {
+        speech.showBubble(
+          to === "long"
+            ? `${round} sessions down! Long break, you earned it.`
+            : "Session done! Take a break.",
+          6000,
+        );
+        if (!dancing.current) {
+          const ids = ["pump", "bounce", "wiggle", "spin"];
+          playEmote(ids[Math.floor(Math.random() * ids.length)]);
+        }
+      } else {
+        speech.showBubble("Break's over. Let's focus!", 5000);
+        core.setPose("wave");
+        window.setTimeout(() => core.setPose("neutral"), 1800);
+      }
+    },
+  });
+
   // Tell the control panel when the pet is busy, and when you finished (or cancelled) drawing a box.
   useEffect(() => {
     window.api.bus.send({ type: "thinking", on: speech.thinking });
@@ -358,6 +397,7 @@ export default function App() {
       {zone.active && (open || zone.flash) && <ZoneBox rect={zone.active} />}
       <WorldObjects objs={objs} hover={hover} onDown={act.objDown} />
       <div ref={wrapRef} className="wrap" {...hover} style={wrapStyle}>
+        <PomodoroBadge pomo={pomo} />
         <SpeechBubbles
           says={speech.says}
           userSays={speech.userSays}

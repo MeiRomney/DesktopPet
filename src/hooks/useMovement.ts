@@ -29,6 +29,7 @@ export function useMovement(
     objDrag,
     hovering,
     busy,
+    quiet,
   } = c;
   const { showBubble } = speech;
 
@@ -123,7 +124,8 @@ export function useMovement(
                     : window.innerHeight * (0.4 + Math.random() * 0.5),
                 );
               }
-              if (Math.random() < 0.3) showBubble(idleLine(), 3500);
+              if (!quiet.current && Math.random() < 0.3)
+                showBubble(idleLine(), 3500);
             }
           }
           loop();

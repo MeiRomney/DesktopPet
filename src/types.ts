@@ -53,6 +53,18 @@ export type Eyes = {
   track: boolean;
 };
 
+export type PomoPhase = "focus" | "short" | "long";
+export type PomoAction = "toggle" | "reset" | "skip" | "sync";
+/** started = a session exists (false = fresh/idle). left/total are in seconds. round = focus sessions completed. */
+export type PomoState = {
+  phase: PomoPhase;
+  running: boolean;
+  started: boolean;
+  left: number;
+  total: number;
+  round: number;
+};
+
 /** Messages between the control panel window and the pet window (relayed by the main process). */
 export type BusMsg =
   | { type: "spawn"; emoji: string; name: string }
@@ -67,7 +79,10 @@ export type BusMsg =
   | { type: "runOut" }
   | { type: "runIn" }
   | { type: "shortcut"; action: "emote" | "dance" | "toys" | "mute" }
-  | { type: "petVisible"; on: boolean };
+  | { type: "petVisible"; on: boolean }
+  | { type: "petVisible"; on: boolean }
+  | { type: "pomo"; action: PomoAction }
+  | { type: "pomoTick"; state: PomoState };
 
 declare global {
   interface Window {

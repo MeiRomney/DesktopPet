@@ -8,7 +8,7 @@ import { offlineReply } from "../reactions";
 
 /** Everything the pet says: bubbles, scripted lines, and the AI (chat replies, random reactions, screen glances). */
 export function useSpeech(c: PetCore) {
-  const { setPose, busy, S, drag, objDrag, hovering } = c;
+  const { setPose, busy, S, drag, objDrag, hovering, quiet } = c;
   const [says, setSays] = useState("");
   const [thinking, setThinking] = useState(false);
   const [userSays, setUserSays] = useState(""); // what you just typed, shown for a few seconds
@@ -114,7 +114,8 @@ export function useSpeech(c: PetCore) {
             !S.current.open &&
             !drag.current &&
             !objDrag.current &&
-            !mutedRef.current
+            !mutedRef.current &&
+            !quiet.current
           )
             lookAround(false);
           loop();
@@ -141,7 +142,8 @@ export function useSpeech(c: PetCore) {
             !hovering.current &&
             !busy.current &&
             !S.current.open &&
-            !mutedRef.current
+            !mutedRef.current &&
+            !quiet.current
           )
             say(
               "You are idle and nobody is talking to you. Say something spontaneous: a thought, a joke, or something you remember.",

@@ -30,6 +30,9 @@ import { SHORTCUTS } from "../shortcuts";
 import { AiTab } from "./AiTab";
 import type { AiApi } from "../hooks/useAi";
 import { Character } from "../characters";
+import { fmtClock, idleState } from "../hooks/usePomodoro";
+import type { PomoSettings } from "../hooks/usePomodoroSettings";
+import type { PomoAction, PomoState } from "../types";
 
 type Zone = ReturnType<typeof useZone>;
 type Dance = ReturnType<typeof useDanceSettings>;
@@ -51,6 +54,12 @@ export type SystemApi = {
   toggleMute(): void;
   run(action: "emote" | "dance" | "toys"): void;
 };
+export type PomoApi = {
+  settings: PomoSettings;
+  setSettings(p: Partial<PomoSettings>): void;
+  state: PomoState | null; // null until the pet window answers
+  command(a: PomoAction): void;
+};
 
 type Props = {
   appearance: Appearance;
@@ -67,6 +76,7 @@ type Props = {
   quick: ReturnType<typeof useQuickToys>;
   onSpawn(emoji: string, name: string): void;
   onStartZone(): void;
+  pomo: PomoApi;
   ai: AiApi;
 };
 
@@ -938,6 +948,116 @@ const Keys = ({ keys }: { keys: string[] }) => (
     ))}
   </span>
 );
+
+function PomodoroTab({ p }: { p: PomoApi }) {
+  const c = p.settings;
+  const s = p.state ?? idleState(c);
+  const focus = s.phase === "focus";
+  const label = !s.started
+    ? "Ready to focus"
+    : focus
+      ? `Focus: session ${(s.round % c.rounds) + 1} of ${c.rounds}`
+      : s.phase === "long"
+        ? "Long break"
+        : "Short break";
+  const pct = s.total ? Math.min(100, ((s.total - s.left) / s.total) * 100) : 0;
+  const startLabel = s.running
+    ? "⏸ Pause"
+    : s.started && s.left < s.total
+      ? "▶ Resume"
+      : "▶ Start";
+  const min = (v: number) => `${v}m`;
+  return (
+    <>
+      <Section
+        title="Pomodoro timer"
+        hint="Focus in short sessions with breaks in between. The pet shows the time above its head."
+      >
+        <div className="cpPhase">{label}</div>
+        <div className="cpClock">{fmtClock(s.left)}</div>
+        <div className="cpBar">
+          <i style={{ width: `${pct}%` }} />
+        </div>
+        <div className="cpPomoBtns">
+          <button className="pill on" onClick={() => p.command("toggle")}>
+            {startLabel}
+          </button>
+          <button
+            className="pill"
+            disabled={!s.started}
+            onClick={() => p.command("skip")}
+          >
+            ⏭ Skip
+          </button>
+          <button
+            className="pill"
+            disabled={!s.started}
+            onClick={() => p.command("reset")}
+          >
+            ■ Reset
+          </button>
+        </div>
+      </Section>
+      <Section
+        title="Lengths"
+        hint="Changes apply from the next phase. Before you start, they update the clock."
+      >
+        <Slider
+          label="Focus"
+          min={5}
+          max={90}
+          step={5}
+          value={c.focus}
+          onChange={(v) => p.setSettings({ focus: v })}
+          show={min}
+        />
+        <Slider
+          label="Short break"
+          min={1}
+          max={30}
+          step={1}
+          value={c.short}
+          onChange={(v) => p.setSettings({ short: v })}
+          show={min}
+        />
+        <Slider
+          label="Long break"
+          min={5}
+          max={60}
+          step={5}
+          value={c.long}
+          onChange={(v) => p.setSettings({ long: v })}
+          show={min}
+        />
+        <Slider
+          label="Sessions"
+          min={2}
+          max={8}
+          step={1}
+          value={c.rounds}
+          onChange={(v) => p.setSettings({ rounds: v })}
+          show={String}
+        />
+        <p className="cpHint">Sessions = focus sessions before a long break.</p>
+      </Section>
+      <Section title="Behavior">
+        <Toggle
+          on={c.auto}
+          onChange={() => p.setSettings({ auto: !c.auto })}
+          label="Auto-start next phase"
+          desc="Off: it waits for you to press Start after each phase."
+        />
+        <Toggle
+          on={c.quiet}
+          onChange={() => p.setSettings({ quiet: !c.quiet })}
+          label="Quiet while focusing"
+          desc="No idle chatter, random AI lines or screen glances during focus."
+        />
+      </Section>
+    </>
+  );
+}
+
 function SettingsTab({ s }: { s: SystemApi }) {
   const buttons: Record<string, ReactNode> = {
     pet: (
@@ -1087,23 +1207,18 @@ const TABS: (Tab | "divider")[] = [
     render: (p) => <CameraTab s={p.camera} />,
   },
   {
+    id: "pomodoro",
+    icon: "🍅",
+    label: "Pomodoro",
+    render: (p) => <PomodoroTab p={p.pomo} />,
+  },
+  {
     id: "settings",
     icon: "⚙️",
     label: "Settings",
     render: (p) => <SettingsTab s={p.system} />,
   },
   "divider",
-  {
-    id: "pomodoro",
-    icon: "🍅",
-    label: "Pomodoro",
-    render: () => (
-      <SoonTab
-        title="Pomodoro timer"
-        text="Focus sessions with breaks, and your pet cheering you on."
-      />
-    ),
-  },
   {
     id: "reminders",
     icon: "🔔",

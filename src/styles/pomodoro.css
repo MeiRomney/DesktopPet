@@ -1,0 +1,50 @@
+/* Badge above the pet */
+.pomoBadge {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: calc(6px + var(--lift, 0px));
+  padding: 3px 10px;
+  background: var(--lilac);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  box-shadow: 2px 2px 0 var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 9;
+}
+.pomoBadge.brk {
+  background: #c9f2d6;
+}
+.pomoBadge.paused {
+  opacity: 0.75;
+}
+/* when the badge is there, the speech bubble sits above it */
+.pomoBadge ~ .bubble {
+  margin-bottom: calc(40px + var(--lift, 0px));
+}
+
+/* Control panel tab */
+.cpClock {
+  text-align: center;
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.cpPhase {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+}
+.cpPomoBtns {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}

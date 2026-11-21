@@ -65,6 +65,7 @@ export function usePetCore(
   const lastFlee = useRef(0);
   const hovering = useRef(false);
   const busy = useRef(false);
+  const quiet = useRef(false);
   const rail = useRef<{ id: string; u: number } | null>(null); // the edge it stands on, and how far along (0..1); null = off the edges
   const afterDrag = useRef<(() => void) | null>(null); // Edges mode: called after you drop the pet
   const edgeStep = useRef<(() => void) | null>(null); // Edges mode: picks the next place to walk to
@@ -158,6 +159,7 @@ export function usePetCore(
     lastFlee,
     hovering,
     busy,
+    quiet,
     edgeFlee,
     toyAct,
     S,

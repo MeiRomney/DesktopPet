@@ -8,6 +8,8 @@ import { useSize } from "./hooks/useSize";
 import { useZone } from "./hooks/useZone";
 import { useMute } from "./hooks/useMute";
 import { useAi } from "./hooks/useAi";
+import { usePomodoroSettings } from "./hooks/usePomodoroSettings";
+import type { PomoState } from "./types";
 
 /** The control panel window: a normal desktop window. It never moves the pet itself. Settings go through
  *  localStorage, actions through window.api.bus. Closing this window quits the app (see electron/main.cjs). */
@@ -23,15 +25,18 @@ export default function ControlApp() {
   const [petVisible, setPetVisible] = useState(true);
   const mute = useMute();
   const ai = useAi();
+  const pomoSettings = usePomodoroSettings();
+  const [pomoState, setPomoState] = useState<PomoState | null>(null);
 
   useEffect(() => {
     document.title = "Jubilibi: Control panel";
     document.documentElement.classList.add("ctrlWin");
-    window.api.petVisible().then(setPetVisible);
+    window.api.bus.send({ type: "pomo", action: "sync" });
     return window.api.bus.on((m) => {
       if (m.type === "thinking") setThinking(m.on);
       else if (m.type === "danceTick") setDanceLeft(m.on ? m.left : null);
       else if (m.type === "petVisible") setPetVisible(m.on);
+      else if (m.type === "pomoTick") setPomoState(m.state);
     });
   }, []);
 
@@ -76,6 +81,12 @@ export default function ControlApp() {
         window.api.bus.send({ type: "spawn", emoji, name })
       }
       onStartZone={() => window.api.bus.send({ type: "drawZone" })}
+      pomo={{
+        settings: pomoSettings.settings,
+        setSettings: pomoSettings.update,
+        state: pomoState,
+        command: (action) => window.api.bus.send({ type: "pomo", action }),
+      }}
     />
   );
 }
