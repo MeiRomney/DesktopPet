@@ -25,6 +25,7 @@ import { ToyActProps } from "./components/ToyActProps";
 import { PomodoroBadge } from "./components/PomodoroBadge";
 import { usePomodoro } from "./hooks/usePomodoro";
 import { readPomoSettings } from "./hooks/usePomodoroSettings";
+import { useReminderAlarm } from "./hooks/useReminders";
 
 const PANEL_W = 236; // width of the small pet menu
 
@@ -160,6 +161,22 @@ export default function App() {
     window.setTimeout(() => setEmote(id), 30);
     emoteTimer.current = window.setTimeout(stopDance, e.ms + 30);
   };
+
+  // Reminders: the pet waves, says it out loud (even when muted), and a system notification covers hidden/fullscreen cases.
+  useReminderAlarm((r, late) => {
+    speech.showBubble(
+      `⏰ ${r.text}${late ? " (you missed this one)" : ""}`,
+      12000,
+      true,
+    );
+    try {
+      new Notification("Reminder", { body: r.text });
+    } catch {
+      /* notifications unavailable: the bubble still shows */
+    }
+    if (!S.current.open && !dancing.current) playEmote("wiggle");
+    else core.setPose("happy");
+  });
 
   const homePos = useRef<{ x: number; y: number } | null>(null);
 

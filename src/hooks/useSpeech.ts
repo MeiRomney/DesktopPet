@@ -26,8 +26,8 @@ export function useSpeech(c: PetCore) {
     if (muted) setSays("");
   }, [muted]);
 
-  const showBubble = (t: string, ms = 7000) => {
-    if (mutedRef.current) return;
+  const showBubble = (t: string, ms = 7000, force = false) => {
+    if (mutedRef.current && !force) return;
     setSays(t);
     window.clearTimeout(bubbleTimer.current);
     bubbleTimer.current = window.setTimeout(() => setSays(""), ms);

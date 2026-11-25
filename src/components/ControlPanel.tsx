@@ -33,6 +33,8 @@ import { Character } from "../characters";
 import { fmtClock, idleState } from "../hooks/usePomodoro";
 import type { PomoSettings } from "../hooks/usePomodoroSettings";
 import type { PomoAction, PomoState } from "../types";
+import { useReminders } from "../hooks/useReminders";
+import type { Repeat } from "../reminders";
 
 type Zone = ReturnType<typeof useZone>;
 type Dance = ReturnType<typeof useDanceSettings>;
@@ -1120,6 +1122,116 @@ function SettingsTab({ s }: { s: SystemApi }) {
   );
 }
 
+const QUICK: [number, string][] = [
+  [10, "10 min"],
+  [30, "30 min"],
+  [60, "1 hour"],
+];
+const REPEATS: [Repeat, string][] = [
+  ["none", "Once"],
+  ["daily", "Daily"],
+  ["weekly", "Weekly"],
+];
+// <input type="datetime-local"> wants local time, not UTC
+const toLocalInput = (ms: number) =>
+  new Date(ms - new Date(ms).getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
+const fmtWhen = (ms: number) =>
+  new Date(ms).toLocaleString([], {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+function RemindersTab() {
+  const { list, add, remove } = useReminders();
+  const [text, setText] = useState("");
+  const [when, setWhen] = useState(() => toLocalInput(Date.now() + 30 * 60000));
+  const [repeat, setRepeat] = useState<Repeat>("none");
+  const at = new Date(when).getTime();
+  const valid = !!text.trim() && Number.isFinite(at) && at > Date.now();
+  const submit = () => {
+    if (!valid) return;
+    add(text.trim(), at, repeat);
+    setText("");
+  };
+  return (
+    <>
+      <Section
+        title="New reminder"
+        hint="Your pet says it out loud, even when muted, and a system notification pops up too."
+      >
+        <input
+          className="cpInput"
+          value={text}
+          maxLength={120}
+          placeholder="What should I remind you about?"
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && submit()}
+        />
+        <div className="zoneRow">
+          {QUICK.map(([m, label]) => (
+            <button
+              key={m}
+              className="pill"
+              onClick={() => setWhen(toLocalInput(Date.now() + m * 60000))}
+            >
+              In {label}
+            </button>
+          ))}
+        </div>
+        <input
+          className="cpInput"
+          type="datetime-local"
+          value={when}
+          onChange={(e) => setWhen(e.target.value)}
+        />
+        <div className="cpRow">
+          <span>Repeat</span>
+          <Choice value={repeat} options={REPEATS} onChange={setRepeat} />
+        </div>
+        <div className="zoneRow">
+          <button className="pill on" disabled={!valid} onClick={submit}>
+            ＋ Add reminder
+          </button>
+        </div>
+        {!!text.trim() && !valid && (
+          <p className="cpHint">Pick a time in the future.</p>
+        )}
+      </Section>
+      <Section title="Upcoming">
+        {list.length === 0 ? (
+          <p className="cpHint">Nothing scheduled.</p>
+        ) : (
+          <div className="cpRemList">
+            {list.map((r) => (
+              <div className="cpRem" key={r.id}>
+                <div>
+                  <b>{r.text}</b>
+                  <small>
+                    {fmtWhen(r.at)}
+                    {r.repeat !== "none" && ` · ${r.repeat}`}
+                  </small>
+                </div>
+                <button
+                  className="pill"
+                  aria-label={`Delete reminder: ${r.text}`}
+                  onClick={() => remove(r.id)}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
+    </>
+  );
+}
+
 function SoonTab({ title, text }: { title: string; text: string }) {
   return (
     <div className="cpSoon">
@@ -1213,23 +1325,18 @@ const TABS: (Tab | "divider")[] = [
     render: (p) => <PomodoroTab p={p.pomo} />,
   },
   {
+    id: "reminders",
+    icon: "🔔",
+    label: "Reminders",
+    render: () => <RemindersTab />,
+  },
+  {
     id: "settings",
     icon: "⚙️",
     label: "Settings",
     render: (p) => <SettingsTab s={p.system} />,
   },
   "divider",
-  {
-    id: "reminders",
-    icon: "🔔",
-    label: "Reminders",
-    render: () => (
-      <SoonTab
-        title="Reminders"
-        text="Your pet taps you on the shoulder when something is due."
-      />
-    ),
-  },
   {
     id: "alarms",
     icon: "⏰",
